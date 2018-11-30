@@ -1,0 +1,32 @@
+{
+  "numetal.in00": "gs://broad-gdr-dig-caas-stuff/metal_input/t2d_sa.sl_13k.ln_bmi_anal.vassoc",
+  "numetal.in01": "gs://broad-gdr-dig-caas-stuff/metal_input/t2d_sa.sp_29k.ln_bmi_anal.vassoc",
+  "numetal.in02": "gs://broad-gdr-dig-caas-stuff/metal_input/t2d_sa.ss_29k.ln_bmi_anal.vassoc",
+  "numetal.in03": "gs://broad-gdr-dig-caas-stuff/metal_input/t2d_sa.ss_13k.ln_bmi_anal.vassoc",
+  "numetal.in04": "gs://broad-gdr-dig-caas-stuff/metal_input/t2d_ea.eh_29k.ln_bmi_anal.vassoc",
+  "numetal.in05": "gs://broad-gdr-dig-caas-stuff/metal_input/t2d_ea.ek_29k.ln_bmi_anal.vassoc",
+  "numetal.in06": "gs://broad-gdr-dig-caas-stuff/metal_input/t2d_ea.ek_13k.ln_bmi_anal.vassoc",
+  "numetal.in07": "gs://broad-gdr-dig-caas-stuff/metal_input/t2d_ea.es_29k.ln_bmi_anal.vassoc",
+  "numetal.in08": "gs://broad-gdr-dig-caas-stuff/metal_input/t2d_ea.es_13k.ln_bmi_anal.vassoc",
+  "numetal.in09": "gs://broad-gdr-dig-caas-stuff/metal_input/t2d_hs.ha_13k.ln_bmi_anal.vassoc",
+  "numetal.in10": "gs://broad-gdr-dig-caas-stuff/metal_input/t2d_hs.hs_29k.ln_bmi_anal.vassoc",
+  "numetal.in11": "gs://broad-gdr-dig-caas-stuff/metal_input/t2d_hs.hs_13k.ln_bmi_anal.vassoc",
+  "numetal.in12": "gs://broad-gdr-dig-caas-stuff/metal_input/t2d_hs.sigma_29k.ln_bmi_anal.vassoc",
+  "numetal.in13": "gs://broad-gdr-dig-caas-stuff/metal_input/t2d_hs.sigma_13k.ln_bmi_anal.vassoc",
+  "numetal.in14": "gs://broad-gdr-dig-caas-stuff/metal_input/t2d_aa.aj_13k.ln_bmi_anal.vassoc",
+  "numetal.in15": "gs://broad-gdr-dig-caas-stuff/metal_input/t2d_aa.aw_13k.ln_bmi_anal.vassoc",
+  "numetal.in16": "gs://broad-gdr-dig-caas-stuff/metal_input/t2d_aa.aa_esp.ln_bmi_anal.vassoc",
+  "numetal.in17": "gs://broad-gdr-dig-caas-stuff/metal_input/t2d_aa.ab_29k.ln_bmi_anal.vassoc",
+  "numetal.in18": "gs://broad-gdr-dig-caas-stuff/metal_input/t2d_eu.eu_esp.ln_bmi_anal.vassoc",
+  "numetal.in19": "gs://broad-gdr-dig-caas-stuff/metal_input/t2d_eu.got2d.ln_bmi_anal.vassoc",
+  "numetal.in20": "gs://broad-gdr-dig-caas-stuff/metal_input/t2d_eu.lucamp.ln_bmi_anal.vassoc",
+  "numetal.in21": "gs://broad-gdr-dig-caas-stuff/metal_input/t2d_eu.ua_13k.ln_bmi_anal.vassoc",
+  "numetal.in22": "gs://broad-gdr-dig-caas-stuff/metal_input/t2d_eu.uf_29k.ln_bmi_anal.vassoc",
+  "numetal.in23": "gs://broad-gdr-dig-caas-stuff/metal_input/t2d_eu.ug_29k.ln_bmi_anal.vassoc",
+  "numetal.in24": "gs://broad-gdr-dig-caas-stuff/metal_input/t2d_eu.um_13k.ln_bmi_anal.vassoc",
+  "numetal.out_prefix": "ln_bmi_anal.metal.vassoc",
+  "numetal.out_postfix": ".tbl"
+}
+
+
+
