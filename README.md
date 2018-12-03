@@ -1,2 +1,2 @@
 # cumulonimbus
-DIG Aggregator reimplemented using WDL and Google Cloud Platform
+For now, bottom line analysis running METAL using WDL.
