@@ -92,13 +92,15 @@ task metal {
   String out_prefix
   String out_postfix
   runtime {
-    docker: "us.gcr.io/broad-gdr-dig-storage/metal:2018-08-28"
+    docker: "us.gcr.io/broad-gdr-dig-storage/metal-python:2018-08-28"
     cpu: 1
     memory: "3 GB"
     disks: "local-disk 20 HDD"
   }
   command {
-    cat << EOF > script.metal
+    python2 << EOF
+    scriptFile = open("script.metal", "w")
+    script = """
     SCHEME STDERR
     MARKER ID
     PVALUE P
@@ -137,6 +139,10 @@ task metal {
     PROCESS ${in24}
     OUTFILE ${out_prefix} ${out_postfix}
     ANALYZE HETEROGENEITY
+    """
+    scriptFile = open("script.metal", "w")
+    scriptFile.write(script)
+    scriptFile.close()
     EOF
     /metal script.metal
   }
