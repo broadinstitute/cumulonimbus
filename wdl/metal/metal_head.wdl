@@ -1,6 +1,6 @@
 import "metal.wdl"
 
-workflow metal_song {
+workflow metal_head {
   Array[File] inputs
   String out_prefix
   String out_postfix
