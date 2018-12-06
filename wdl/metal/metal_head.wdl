@@ -60,17 +60,17 @@ task metal {
         set -e
         cat << EOF >metalcast.py
         import json
-        settingsFile = open(~{write_json(settings)}, "r")
+        settingsFile = open("~{write_json(settings)}", "r")
         settings = json.load(settingsFile)
         settingsFile.close()
         print("=== BEGIN settings ===")
         print(json.dumps(settings, sort_keys=True, indent=4))
         print("=== END settings ===")
-        inputs = map(lambda: fileSetting: fileSetting.file, settings.fileSettings)
+        inputs = map(lambda fileSetting: fileSetting["file"], settings["file_settings"])
         print("=== BEGIN settings ===")
         print(settings)
         print("=== END settings ===")
-        globalSettings = settings.globalSettings
+        globalSettings = settings["global_settings"]
         preamble = """
         SCHEME STDERR
         MARKER ID
@@ -86,7 +86,7 @@ task metal {
         """
         processes = reduce(lambda item1, item2: item1 + item2, map(lambda item: "PROCESS " + item + "\n", inputs))
         postamble = """
-        OUTFILE""" + globalSettings.out_prefix + " " + globalSettings.out_postfix + """
+        OUTFILE """ + globalSettings["out_prefix"] + " " + globalSettings["out_postfix"] + """
         ANALYZE HETEROGENEITY
         """
         script = preamble + "\n" + processes + "\n" + postamble
