@@ -1,8 +1,26 @@
 {
   "metal_head.settings": {
     "global_settings": {
+      "scheme": "STDERR",
+      "average_freq": true,
+      "min_max_freq": true,
+      "std_err": "SEBETA",
+      "custom_variables": [
+        "TotalSampleSize"
+      ],
       "out_prefix": "ln_bmi_anal.metal.vassoc",
       "out_postfix": ".tbl"
+    },
+    "default_file_options": {
+      "marker": "ID",
+      "p_value": "P",
+      "freq": "MAF",
+      "alt_allele": "ALT",
+      "ref_allele": "REF",
+      "effect": "BETA",
+      "custom_variable_map": {
+        "TotalSampleSize": "NS"
+      }
     },
     "file_settings": [
       {
