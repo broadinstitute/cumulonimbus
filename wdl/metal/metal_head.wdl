@@ -74,30 +74,30 @@ task metal {
         def addLine(lines, line):
             lines.append(line)
         def addValue(lines, prefix, dict, key, dictDefault = {}):
-            value = dict.get(key, dictDefault.get(key))
+            value = dict.get(key) or dictDefault.get(key)
             if(value is not None):
                 lines.append(prefix + " " + value)
         def addFlag(lines, prefix, dict, key, dictDefault = {}):
-            value = dict.get(key, dictDefault.get(key))
+            value = dict.get(key) or dictDefault.get(key)
             if(value is not None):
                 if(value):
                     lines.append(prefix + " ON")
                 else:
                     lines.append(prefix + " OFF")
         def addTwoValues(lines, prefix, dict, key1, key2, dictDefault = {}):
-            value1 = dict.get(key1, dictDefault.get(key1))
-            value2 = dict.get(key2, dictDefault.get(key2))
+            value1 = dict.get(key1) or dictDefault.get(key1)
+            value2 = dict.get(key2) or dictDefault.get(key2)
             if(value1 is not None and value2 is not None):
                 lines.append(prefix + " " + value1 + " " + value2)
         def addArray(lines, prefix, dict, key, dictDefault = {}):
-            values = dict.get(key, dictDefault.get(key))
+            values = dict.get(key) or dictDefault.get(key)
             if(values is not None):
                 for value in values:
                     lines.append(prefix + " " + value)
         def addMap(lines, prefix, dict, key, dictDefault = {}):
-            values = dict.get(key, dictDefault.get(key))
+            values = dict.get(key) or dictDefault.get(key)
             if(values is not None):
-                for subKey, value in values :
+                for subKey, value in values.items() :
                     lines.append(prefix + " " + subKey + " AS " + value)
         addValue(lines, "SCHEME", globalSettings, "scheme")
         addFlag(lines, "AVERAGEFREQ", globalSettings, "average_freq")
@@ -105,15 +105,16 @@ task metal {
         addValue(lines, "STDERR", globalSettings, "std_err")
         addValue(lines, "EFFECT", globalSettings, "effect")
         addArray(lines, "CUSTOMVARIABLE", globalSettings, "custom_variables")
-        if("default_file_options" in settings):
-            defaultFileOptions = settings["default_file_options"]
-            addValue(lines, "MARKER", defaultFileOptions, "marker")
-            addValue(lines, "PVALUE", defaultFileOptions, "p_value")
-            addValue(lines, "FREQ", defaultFileOptions, "freq")
-            addTwoValues(lines, "ALLELE", defaultFileOptions, "alt_allele", "ref_allele")
-            addValue(lines, "EFFECT", defaultFileOptions, "effect")
-            addLine(lines, "LABEL TotalSampleSize as NS")
-        lines += map(lambda item: "PROCESS " + item, inputs)
+        defaultFileOptions = settings.get("default_file_options") or {}
+        for fileSetting in settings["file_settings"]:
+            fileOptions = fileSetting.get("options") or {}
+            addValue(lines, "MARKER", fileOptions, "marker", defaultFileOptions)
+            addValue(lines, "PVALUE", fileOptions, "p_value", defaultFileOptions)
+            addValue(lines, "FREQ", fileOptions, "freq", defaultFileOptions)
+            addTwoValues(lines, "ALLELE", fileOptions, "alt_allele", "ref_allele", defaultFileOptions)
+            addValue(lines, "EFFECT", fileOptions, "effect", defaultFileOptions)
+            addMap(lines, "LABEL", fileOptions, "custom_variable_map", defaultFileOptions)
+            addLine(lines, "PROCESS " + fileSetting["file"])
         addTwoValues(lines, "OUTFILE", globalSettings, "out_prefix", "out_postfix")
         addLine(lines, "ANALYZE HETEROGENEITY")
         script = reduce(lambda line1, line2: line1 + "\n" + line2, lines) + "\n"
