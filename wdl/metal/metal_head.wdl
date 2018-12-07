@@ -55,7 +55,7 @@ task metal {
         memory: "3 GB"
         disks: "local-disk 20 HDD"
     }
-    command {
+    command <<<
         set -e
         cat << EOF >metalcast.py
         import json
@@ -73,30 +73,30 @@ task metal {
         lines = []
         def addLine(lines, line):
             lines.append(line)
-        def addValue(lines, prefix, dict, key):
-            if(key in dict):
-                value = dict[key]
+        def addValue(lines, prefix, dict, key, dictDefault = {}):
+            value = dict.get(key, dictDefault.get(key))
+            if(value is not None):
                 lines.append(prefix + " " + value)
-        def addFlag(lines, prefix, dict, key):
-            if(key in dict):
-                value = dict[key]
+        def addFlag(lines, prefix, dict, key, dictDefault = {}):
+            value = dict.get(key, dictDefault.get(key))
+            if(value is not None):
                 if(value):
                     lines.append(prefix + " ON")
                 else:
                     lines.append(prefix + " OFF")
-        def addTwoValues(lines, prefix, dict, key1, key2):
-            if(key1 in dict and key2 in dict):
-                value1 = dict[key1]
-                value2 = dict[key2]
+        def addTwoValues(lines, prefix, dict, key1, key2, dictDefault = {}):
+            value1 = dict.get(key1, dictDefault.get(key1))
+            value2 = dict.get(key2, dictDefault.get(key2))
+            if(value1 is not None and value2 is not None):
                 lines.append(prefix + " " + value1 + " " + value2)
-        def addArray(lines, prefix, dict, key):
-            if(key in dict):
-                values = dict[key]
+        def addArray(lines, prefix, dict, key, dictDefault = {}):
+            values = dict.get(key, dictDefault.get(key))
+            if(values is not None):
                 for value in values:
                     lines.append(prefix + " " + value)
-        def addMap(lines, prefix, dict, key):
-            if(key in dict):
-                values = dict[key]
+        def addMap(lines, prefix, dict, key, dictDefault = {}):
+            values = dict.get(key, dictDefault.get(key))
+            if(values is not None):
                 for subKey, value in values :
                     lines.append(prefix + " " + subKey + " AS " + value)
         addValue(lines, "SCHEME", globalSettings, "scheme")
@@ -129,7 +129,7 @@ task metal {
         cat script.metal
         echo "=== END script.metal ==="
         /metal script.metal
-    }
+    >>>
     output {
         File out = glob(global_settings.out_prefix + "*" + global_settings.out_postfix)[0]
     }
