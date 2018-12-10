@@ -73,29 +73,30 @@ task metal {
         lines = []
         def addLine(lines, line):
             lines.append(line)
-        def addValue(lines, prefix, dict, key, dictDefault = {}):
-            value = dict.get(key) or dictDefault.get(key)
+        def addValue(lines, prefix, dict, key, dictDefault = {}, defaultValue = None):
+            value = dict.get(key) or dictDefault.get(key) or defaultValue
             if(value is not None):
                 lines.append(prefix + " " + value)
-        def addFlag(lines, prefix, dict, key, dictDefault = {}):
-            value = dict.get(key) or dictDefault.get(key)
+        def addFlag(lines, prefix, dict, key, dictDefault = {}, defaultValue = None):
+            value = dict.get(key) or dictDefault.get(key) or defaultValue
             if(value is not None):
                 if(value):
                     lines.append(prefix + " ON")
                 else:
                     lines.append(prefix + " OFF")
-        def addTwoValues(lines, prefix, dict, key1, key2, dictDefault = {}):
-            value1 = dict.get(key1) or dictDefault.get(key1)
-            value2 = dict.get(key2) or dictDefault.get(key2)
+        def addTwoValues(lines, prefix, dict, key1, key2, dictDefault = {},
+                         defaultValue1 = None, defaultValue2 = None):
+            value1 = dict.get(key1) or dictDefault.get(key1) or defaultValue1
+            value2 = dict.get(key2) or dictDefault.get(key2) or defaultValue2
             if(value1 is not None and value2 is not None):
                 lines.append(prefix + " " + value1 + " " + value2)
-        def addArray(lines, prefix, dict, key, dictDefault = {}):
-            values = dict.get(key) or dictDefault.get(key)
+        def addArray(lines, prefix, dict, key, dictDefault = {}, defaultValue = None):
+            values = dict.get(key) or dictDefault.get(key) or defaultValue
             if(values is not None):
                 for value in values:
                     lines.append(prefix + " " + value)
-        def addMap(lines, prefix, dict, key, dictDefault = {}):
-            values = dict.get(key) or dictDefault.get(key)
+        def addMap(lines, prefix, dict, key, dictDefault = {}, defaultValue = None):
+            values = dict.get(key) or dictDefault.get(key) or defaultValue
             if(values is not None):
                 for subKey, value in values.items() :
                     lines.append(prefix + " " + subKey + " AS " + value)
@@ -108,11 +109,12 @@ task metal {
         defaultFileOptions = settings.get("default_file_options") or {}
         for fileSetting in settings["file_settings"]:
             fileOptions = fileSetting.get("options") or {}
-            addValue(lines, "MARKER", fileOptions, "marker", defaultFileOptions)
-            addValue(lines, "PVALUE", fileOptions, "p_value", defaultFileOptions)
-            addValue(lines, "FREQ", fileOptions, "freq", defaultFileOptions)
-            addTwoValues(lines, "ALLELE", fileOptions, "alt_allele", "ref_allele", defaultFileOptions)
-            addValue(lines, "EFFECT", fileOptions, "effect", defaultFileOptions)
+            addValue(lines, "MARKER", fileOptions, "marker", defaultFileOptions, "MARKER")
+            addValue(lines, "PVALUE", fileOptions, "p_value", defaultFileOptions, "PVALUE")
+            addValue(lines, "FREQ", fileOptions, "freq", defaultFileOptions, "FREQ")
+            addTwoValues(lines, "ALLELE", fileOptions, "alt_allele", "ref_allele", defaultFileOptions,
+                         "ALLELE1", "ALLELE2")
+            addValue(lines, "EFFECT", fileOptions, "effect", defaultFileOptions, "EFFECT")
             addMap(lines, "LABEL", fileOptions, "custom_variable_map", defaultFileOptions)
             addLine(lines, "PROCESS " + fileSetting["file"])
         addTwoValues(lines, "OUTFILE", globalSettings, "out_prefix", "out_postfix")
