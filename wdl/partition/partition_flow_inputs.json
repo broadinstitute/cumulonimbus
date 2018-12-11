@@ -1,0 +1,7 @@
+{
+  "partition_flow.cutoff_frequency": "0.05",
+  "partition_flow.frequency_column": "MAF",
+  "partition_flow.variants": "gs://broad-gdr-dig-caas-stuff/metal_input/t2d_sa.sl_13k.ln_bmi_anal.vassoc",
+  "partition_flow.variants_rare_name": "t2d_sa.sl_13k.ln_bmi_anal.rare.vassoc",
+  "partition_flow.variants_common_name": "t2d_sa.sl_13k.ln_bmi_anal.common.vassoc"
+}
