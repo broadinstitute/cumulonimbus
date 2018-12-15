@@ -1,0 +1,12 @@
+{
+  "bottom_line.output_prefix": "results",
+  "bottom_line.output_suffix": "vassoc",
+  "bottom_line.cutoff_frequency": "0.05",
+  "bottom_line.cohorts": [
+    {
+      "name": "sa",
+      "input_files": []
+    }
+  ]
+}
+
