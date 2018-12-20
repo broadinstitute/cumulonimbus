@@ -2,7 +2,8 @@
   "bottom_line.output_prefix": "results",
   "bottom_line.output_suffix": "vassoc",
   "bottom_line.cutoff_frequency": "0.05",
-  "bottom_line.cohorts": [
+  "bottom_line.frequency_column": "MAF",
+  "bottom_line.ancestries": [
     {
       "name": "sa",
       "input_files": [

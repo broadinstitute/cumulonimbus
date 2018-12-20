@@ -35,20 +35,23 @@ struct MetalSettings {
 struct InputFile {
     File file
     String dataset_name
-    String frequency_header
+    Map[String, String]? column_mapping
 }
 
 struct Ancestry {
     String name
     Array[InputFile] input_files
+    Map[String, String]? column_mapping
 }
 
 workflow bottom_line {
     input {
         Array[Ancestry] ancestries
         Float cutoff_frequency
+        String frequency_column
         String output_prefix
         String output_suffix
+        Map[String, String]? column_mapping
     }
 
     scatter(ancestry in ancestries) {
@@ -56,19 +59,24 @@ workflow bottom_line {
             String output_base_name = output_prefix + "_" + ancestry.name + "_" + input_file.dataset_name
             call partition {
                 input:
+                    file_column_mapping = input_file.column_mapping,
+                    ancestry_column_mapping = ancestry.column_mapping,
+                    global_column_mapping = column_mapping,
                     cutoff_frequency = cutoff_frequency,
-                    frequency_column = input_file.frequency_header,
+                    frequency_column = frequency_column,
                     variants = input_file.file,
                     variants_rare_name = output_base_name + "_rare." + output_suffix,
                     variants_common_name  = output_base_name + "_common." + output_suffix
             }
         }
     }
-
 }
 
 task partition {
     input {
+        Map[String, String] file_column_mapping = {}
+        Map[String, String] ancestry_column_mapping = {}
+        Map[String, String] global_column_mapping = {}
         Float cutoff_frequency
         String frequency_column
         File variants
