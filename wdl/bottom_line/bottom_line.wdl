@@ -1,37 +1,5 @@
 version 1.0
 
-struct GlobalSettings {
-    String? scheme
-    Boolean? average_freq
-    Boolean? min_max_freq
-    String? std_err
-    Array[String]? custom_variables
-    String out_prefix
-    String out_postfix
-}
-
-struct FileOptions {
-    String? marker
-    String? p_value
-    String? freq
-    String? alt_allele
-    String? ref_allele
-    String? effect
-    Map[String, String]? custom_variable_map
-}
-
-struct FileSetting {
-    File file
-    String dataset_name
-    FileOptions? options
-}
-
-struct MetalSettings {
-    GlobalSettings global_settings
-    FileOptions? default_file_options
-    Array[FileSetting] file_settings
-}
-
 struct InputFile {
     File file
     String dataset_name
@@ -425,6 +393,7 @@ task concat {
                     header_row = next(in_reader)
                     if not header_is_written:
                         out_writer.writerow(header_row)
+                        header_is_written = True
                     for row in in_reader:
                         out_writer.writerow(row)
         print("Done!")
