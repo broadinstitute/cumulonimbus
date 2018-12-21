@@ -49,6 +49,8 @@ workflow bottom_line {
         Array[Ancestry] ancestries
         Float cutoff_frequency
         String frequency_column
+        String marker_column
+        String size_column
         String output_prefix
         String output_suffix
         Map[String, String]? column_mapping
@@ -69,6 +71,27 @@ workflow bottom_line {
                     variants_common_name  = output_base_name + "_common." + output_suffix
             }
         }
+        String output_base_name = output_prefix + "_" + ancestry.name
+        call pick_largest {
+            input:
+                input_files = partition.variants_rare,
+                marker_column = marker_column,
+                size_column = size_column,
+                output_file_name = output_base_name + "_rare." + output_suffix
+        }
+        call metal as metal_common_per_ancestry {
+            input:
+
+        }
+    }
+    call metal as metal_all_common {
+
+    }
+    call metal as metal_all_rare {
+
+    }
+    call concat {
+
     }
 }
 
@@ -79,10 +102,22 @@ task partition {
         Map[String, String] global_column_mapping = {}
         Float cutoff_frequency
         String frequency_column
-        File variants
+        File input_file
         String variants_rare_name
         String variants_common_name
     }
+    File settings_file = write_json(
+        {
+            "file_column_mapping": file_column_mapping,
+            "ancestry_column_mapping": ancestry_column_mapping,
+            "global_column_mapping": global_column_mapping,
+            "cutoff_frequency": cutoff_frequency,
+            "frequency_column": frequency_column,
+            "input_file": input_file,
+            "variants_rare_name": variants_rare_name,
+            "variants_common_name": variants_common_name
+        }
+    )
     runtime {
         docker: "us.gcr.io/broad-gdr-dig-storage/metal-python:2018-08-28"
         cpu: 1
@@ -93,21 +128,28 @@ task partition {
         set -e
         python3 --version
         cat << EOF >partition.py
-        import sys
+        import json
         import csv
+        settingsFile = open("~{settings_file}", "r")
+        settings = json.load(settingsFile)
+        settingsFile.close()
+        print("=== BEGIN settings ===")
+        print(json.dumps(settings, sort_keys=True, indent=4))
+        print("=== END settings ===")
+        file_column_mapping = settings["file_column_mapping"]
+        ancestry_column_mapping = settings["ancestry_column_mapping"]
+        global_column_mapping = settings["global_column_mapping"]
+        cutoff = float(settings["cutoff_frequency"])
+        key = settings["frequency_column"]
+        in_file_name = settings["input_file"]
+        out_file_rare_name = settings["variants_rare_name"]
+        out_file_common_name = settings["variants_common_name"]
 
-        class ArgumentException(Exception):
-            def __init__(self, message):
-                self.message = message
-
-        if len(sys.argv) != 6:
-            raise ArgumentException("Got %s arguments, but need 5." % (len(sys.argv) - 1))
-
-        cutoff = float(sys.argv[1])
-        key = sys.argv[2]
-        in_file_name = sys.argv[3]
-        out_file_rare_name = sys.argv[4]
-        out_file_common_name = sys.argv[5]
+        def map_column_name(name):
+            name = file_column_mapping.get(name) or name
+            name = ancestry_column_mapping.get(name) or name
+            name = global_column_mapping.get(name) or name
+            return name
 
         with open(in_file_name, 'r', newline='') as in_file, \
                 open(out_file_rare_name, 'w') as out_file_rare, \
@@ -115,7 +157,7 @@ task partition {
             in_reader = csv.reader(in_file, delimiter='\t')
             rare_writer = csv.writer(out_file_rare, delimiter='\t')
             common_writer = csv.writer(out_file_common, delimiter='\t')
-            header_row = next(in_reader)
+            header_row = map(map_column_name, next(in_reader))
             key_index = header_row.index(key)
             rare_writer.writerow(header_row)
             common_writer.writerow(header_row)
@@ -140,11 +182,130 @@ task partition {
     }
 }
 
+task pick_largest {
+    input {
+        Array[File] input_files
+        String marker_column
+        String size_column
+        String output_file_name
+    }
+    File settings_file = write_json(
+        {
+            "input_files": input_files,
+            "marker_column": marker_column,
+            "size_column": size_column,
+            "output_file": output_file_name
+        }
+    )
+    runtime {
+        docker: "us.gcr.io/broad-gdr-dig-storage/metal-python:2018-08-28"
+        cpu: 1
+        memory: "3 GB"
+        disks: "local-disk 20 HDD"
+    }
+    command <<<
+        set -e
+        python3 --version
+        cat << EOF > union.py
+        import json
+        import csv
+        settingsFile = open("~{settings_file}", "r")
+        settings = json.load(settingsFile)
+        settingsFile.close()
+        print("=== BEGIN settings ===")
+        print(json.dumps(settings, sort_keys=True, indent=4))
+        print("=== END settings ===")
+        in_file_names = settings["input_files"]
+        marker_column = settings["marker_column"]
+        size_column = settings["size_column"]
+        out_file_name = settings["output_file"]
+        marker_list = []
+        markers = set(marker_list)
+        column_list = []
+        union_data = {}
+        for in_file_name in in_file_names:
+            with open(in_file_name, 'r', newline='') as in_file:
+                in_reader = csv.reader(in_file, delimiter='\t')
+                header_row = next(in_reader)
+                for column on header_row:
+                    if not column in column_list:
+                        column_list.append(column)
+                marker_column_index = header_row.index(marker_column)
+                size_column_index = header_row.index(size_column)
+                for row in in_reader:
+                    marker = row[marker_column_index]
+                    size = float(row[marker_column_index])
+                    if(not marker in markers):
+                        marker_list.append(marker)
+                        markers.add(marker)
+                    row_dict = dict(zip(header_row, row))
+                    union_entry = union_data[marker]
+                    if(union_entry is None):
+                        union_data[marker] = row_dict
+                    else:
+                        union_size = float(union_entry[size_column])
+                        if(size > union_size)
+                            union_data[marker] = row_dict
+        with open(out_file_name, 'w') as out_file:
+            out_writer = csv.writer(out_file, delimiter='\t')
+            out_writer.writerow(column_list)
+            for marker in marker_list:
+                entry = union_data[marker]
+                row = map(lambda column: entry[column] or "NA", column_list)
+                out_writer.writerow(row)
+        EOF
+        echo "=== BEGIN union.py ==="
+        cat union.py
+        echo "=== END union.py ==="
+        python union.py
+    >>>
+    output {
+        File output_file = output_file_name
+    }
+}
+
 task metal {
     input {
-        MetalSettings settings
+        Array[File] input_files
+        String column_counting = "STRICT"
+        Boolean overlap = false
+        String marker_column = "MARKER"
+        String weight_column = "N"
+        String out_prefix
+        String out_postfix
+        String scheme = "scheme"
+        Boolean average_freq = false
+        Boolean min_max_freq = false
+        String std_err = "STDERR"
+        String? effect
+        String marker = "MARKER"
+        String p_value = "PVALUE"
+        String freq = "FREQ"
+        String alt_allele = "ALLELE1",
+        String ref_allele = "ALLELE2"
+        Array[String] custom_variables = []
     }
-    GlobalSettings global_settings = settings.global_settings
+    File settings_file = write_json(
+        {
+            "input_files": input_files,
+            "overlap": overlap,
+            "column_counting": column_counting,
+            "marker_column": marker_column,
+            "out_prefix": out_prefix,
+            "out_postfix": out_postfix,
+            "scheme": scheme,
+            "average_freq": average_freq,
+            "min_max_freq": min_max_freq,
+            "std_err": std_err,
+            "effect": effect,
+            "custom_variables": custom_variables,
+            "marker": marker,
+            "p_value": p_value,
+            "freq": freq,
+            "alt_allele": alt_allele,
+            "ref_allele": ref_allele
+        }
+    )
     runtime {
         docker: "us.gcr.io/broad-gdr-dig-storage/metal-python:2018-08-28"
         cpu: 1
@@ -155,66 +316,56 @@ task metal {
         set -e
         cat << EOF >metalcast.py
         import json
-        settingsFile = open("~{write_json(settings)}", "r")
+        settingsFile = open("~{settings_file}", "r")
         settings = json.load(settingsFile)
         settingsFile.close()
         print("=== BEGIN settings ===")
         print(json.dumps(settings, sort_keys=True, indent=4))
         print("=== END settings ===")
-        inputs = map(lambda fileSetting: fileSetting["file"], settings["file_settings"])
-        print("=== BEGIN settings ===")
-        print(settings)
-        print("=== END settings ===")
-        globalSettings = settings["global_settings"]
         lines = []
         def addLine(lines, line):
             lines.append(line)
-        def addValue(lines, prefix, dict, key, dictDefault = {}, defaultValue = None):
-            value = dict.get(key) or dictDefault.get(key) or defaultValue
+        def addValue(lines, prefix, dict, key):
+            value = dict.get(key)
             if(value is not None):
                 lines.append(prefix + " " + value)
-        def addFlag(lines, prefix, dict, key, dictDefault = {}, defaultValue = None):
-            value = dict.get(key) or dictDefault.get(key) or defaultValue
+        def addFlag(lines, prefix, dict, key):
+            value = dict.get(key)
             if(value is not None):
                 if(value):
                     lines.append(prefix + " ON")
                 else:
                     lines.append(prefix + " OFF")
-        def addTwoValues(lines, prefix, dict, key1, key2, dictDefault = {},
-                         defaultValue1 = None, defaultValue2 = None):
-            value1 = dict.get(key1) or dictDefault.get(key1) or defaultValue1
-            value2 = dict.get(key2) or dictDefault.get(key2) or defaultValue2
+        def addTwoValues(lines, prefix, dict, key1, key2):
+            value1 = dict.get(key1) or defaultValue1
+            value2 = dict.get(key2) or defaultValue2
             if(value1 is not None and value2 is not None):
                 lines.append(prefix + " " + value1 + " " + value2)
-        def addArray(lines, prefix, dict, key, dictDefault = {}, defaultValue = None):
-            values = dict.get(key) or dictDefault.get(key) or defaultValue
-            if(values is not None):
-                for value in values:
-                    lines.append(prefix + " " + value)
-        def addMap(lines, prefix, dict, key, dictDefault = {}, defaultValue = None):
-            values = dict.get(key) or dictDefault.get(key) or defaultValue
-            if(values is not None):
-                for subKey, value in values.items() :
-                    lines.append(prefix + " " + subKey + " AS " + value)
-        addValue(lines, "SCHEME", globalSettings, "scheme")
-        addFlag(lines, "AVERAGEFREQ", globalSettings, "average_freq")
-        addFlag(lines, "MINMAXFREQ", globalSettings, "min_max_freq")
-        addValue(lines, "STDERR", globalSettings, "std_err")
-        addValue(lines, "EFFECT", globalSettings, "effect")
-        addArray(lines, "CUSTOMVARIABLE", globalSettings, "custom_variables")
-        defaultFileOptions = settings.get("default_file_options") or {}
-        for fileSetting in settings["file_settings"]:
-            fileOptions = fileSetting.get("options") or {}
-            addValue(lines, "MARKER", fileOptions, "marker", defaultFileOptions, "MARKER")
-            addValue(lines, "PVALUE", fileOptions, "p_value", defaultFileOptions, "PVALUE")
-            addValue(lines, "FREQ", fileOptions, "freq", defaultFileOptions, "FREQ")
-            addTwoValues(lines, "ALLELE", fileOptions, "alt_allele", "ref_allele", defaultFileOptions,
-                         "ALLELE1", "ALLELE2")
-            addValue(lines, "EFFECT", fileOptions, "effect", defaultFileOptions, "EFFECT")
-            addMap(lines, "LABEL", fileOptions, "custom_variable_map", defaultFileOptions)
-            addLine(lines, "PROCESS " + fileSetting["file"])
+        def addCustomVariables(lines, dict, key):
+            variables = dict.get(key)
+            if(variables is not None):
+                for variable in variables:
+                    lines.append("CUSTOMVARIABLE " + variable)
+                    lines.append("LABEL " + variable + " AS " + variable")
+        addLine(lines, "SEPARATOR TAB")
+        addValue(lines, "SCHEME", settings, "scheme")
+        addValue(lines, "WEIGHTLABE", settings, "weight_column")
+        addFlag(lines, "OVERLAP", settings, "overlap")
+        addFlag(lines, "AVERAGEFREQ", settings, "average_freq")
+        addFlag(lines, "MINMAXFREQ", settings, "min_max_freq")
+        addValue(lines, "COLUMNCOUNTING", settings, "column_counting")
+        addValue(lines, "STDERR", settings, "std_err")
+        addValue(lines, "EFFECT", settings, "effect")
+        addValue(lines, "MARKER", settings, "marker")
+        addValue(lines, "PVALUE", settings, "p_value")
+        addValue(lines, "FREQ", settings, "freq")
+        addTwoValues(lines, "ALLELE", fileOptions, "alt_allele", "ref_allele")
+        addCustomVariables(lines, settings, "custom_variables")
+        for input_file in settings["input_files"]:
+            addLine(lines, "PROCESS " + input_file)
         addTwoValues(lines, "OUTFILE", globalSettings, "out_prefix", "out_postfix")
-        addLine(lines, "ANALYZE HETEROGENEITY")
+        addLine(lines, "ANALYZE")
+        addLine("QUIT")
         script = reduce(lambda line1, line2: line1 + "\n" + line2, lines) + "\n"
         scriptFile = open("script.metal", "w")
         scriptFile.write(script)
@@ -231,5 +382,54 @@ task metal {
     >>>
     output {
         File out = glob(global_settings.out_prefix + "*" + global_settings.out_postfix)[0]
+    }
+}
+
+task concat {
+    input {
+        Array[File] input_files
+        String output_file_name
+    }
+    File settings_file = write_json(
+        {
+            "input_file_names": input_files,
+            "output_file_name": output_file_name
+        }
+    )
+    runtime {
+        docker: "us.gcr.io/broad-gdr-dig-storage/metal-python:2018-08-28"
+        cpu: 1
+        memory: "3 GB"
+        disks: "local-disk 20 HDD"
+    }
+    command <<<
+        set -e
+        cat << EOF >metalcast.py
+        import json
+        import csv
+        settingsFile = open("~{settings_file}", "r")
+        settings = json.load(settingsFile)
+        settingsFile.close()
+        print("=== BEGIN settings ===")
+        print(json.dumps(settings, sort_keys=True, indent=4))
+        print("=== END settings ===")
+        in_file_names = settings["input_file_names"]
+        out_file_name = settings["output_file_name"]
+        with open(out_file_name, 'w') as out_file:
+            out_writer = csv.writer(out_file, delimiter='\t')
+            header_is_written = False
+            for in_file_name in in_file_names:
+                print("Now going to add " + in_file_name)
+                with open(in_file_name, 'r') as in_file:
+                    in_reader = csv.reader(in_file, delimiter='\t')
+                    header_row = next(in_reader)
+                    if not header_is_written:
+                        out_writer.writerow(header_row)
+                    for row in in_reader:
+                        out_writer.writerow(row)
+        print("Done!")
+    >>>
+    output {
+        File output_file = output_file_name
     }
 }
