@@ -72,16 +72,46 @@ workflow bottom_line {
                 ref_allele = ref_allele
         }
     }
-    call metal as metal_all_common {
-        input:
-
-    }
     call metal as metal_all_rare {
         input:
-
+            input_files = pick_largest.output_file,
+            column_counting = "LENIENT",
+            overlap = false,
+            marker = marker_column,
+            weight_column = size_column,
+            out_prefix = output_prefix,
+            out_postfix = output_suffix,
+            scheme = scheme,
+            average_freq = true,
+            min_max_freq = true,
+            std_err = std_err,
+            effect = effect,
+            p_value = p_value,
+            alt_allele = alt_allele,
+            ref_allele = ref_allele
+    }
+    call metal as metal_all_common {
+        input:
+            input_files = metal_common_per_ancestry.out,
+            column_counting = "LENIENT",
+            overlap = false,
+            marker = marker_column,
+            weight_column = size_column,
+            out_prefix = output_prefix,
+            out_postfix = output_suffix,
+            scheme = scheme,
+            average_freq = true,
+            min_max_freq = true,
+            std_err = std_err,
+            effect = effect,
+            p_value = p_value,
+            alt_allele = alt_allele,
+            ref_allele = ref_allele
     }
     call concat {
         input:
+            input_files = [metal_all_common.out, metal_all_rare.out],
+            output_file_name = output_prefix + "." + output_suffix
     }
 }
 
