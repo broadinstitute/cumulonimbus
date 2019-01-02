@@ -27,7 +27,7 @@ workflow bottom_line {
         String p_value = "PVALUE"
         String alt_allele = "ALLELE1"
         String ref_allele = "ALLELE2"
-        Map[String, String]? column_mapping
+        Map[String, String]? column_mapping = { "blub": "blub" }
     }
 
     scatter(ancestry in ancestries) {
@@ -117,9 +117,9 @@ workflow bottom_line {
 
 task partition {
     input {
-        Map[String, String] file_column_mapping = {}
-        Map[String, String] ancestry_column_mapping = {}
-        Map[String, String] global_column_mapping = {}
+        Map[String, String] file_column_mapping = { "blub": "blub" }
+        Map[String, String] ancestry_column_mapping = { "blub": "blub" }
+        Map[String, String] global_column_mapping = { "blub": "blub" }
         Float cutoff_frequency
         String frequency_column
         File input_file
