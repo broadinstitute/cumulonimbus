@@ -3,6 +3,13 @@
   "bottom_line.output_suffix": "vassoc",
   "bottom_line.cutoff_frequency": "0.05",
   "bottom_line.frequency_column": "MAF",
+  "bottom_line.scheme": "STDERR",
+  "bottom_line.marker_column": "ID",
+  "bottom_line.p_value": "P",
+  "bottom_line.std_err": "STDERR",
+  "bottom_line.effect": "SEBETA",
+  "bottom_line.alt_allele": "ALT",
+  "bottom_line.ref_allele": "REF",
   "bottom_line.ancestries": [
     {
       "name": "sa",

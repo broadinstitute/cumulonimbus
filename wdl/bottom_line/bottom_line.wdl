@@ -16,11 +16,17 @@ workflow bottom_line {
     input {
         Array[Ancestry] ancestries
         Float cutoff_frequency
-        String frequency_column
-        String marker_column
-        String size_column
+        String frequency_column = "FREQ"
+        String marker_column = "MARKER"
+        String size_column = "N"
         String output_prefix
         String output_suffix
+        String scheme
+        String std_err = "STDERR"
+        String effect = "EFFECT"
+        String p_value = "PVALUE"
+        String alt_allele = "ALLELE1"
+        String ref_allele = "ALLELE2"
         Map[String, String]? column_mapping
     }
 
@@ -49,7 +55,21 @@ workflow bottom_line {
         }
         call metal as metal_common_per_ancestry {
             input:
-
+                input_files = partition.variants_common,
+                column_counting = "LENIENT",
+                overlap = true,
+                marker = marker_column,
+                weight_column = size_column,
+                out_prefix = output_prefix,
+                out_postfix = output_suffix,
+                scheme = scheme,
+                average_freq = true,
+                min_max_freq = true,
+                std_err = std_err,
+                effect = effect,
+                p_value = p_value,
+                alt_allele = alt_allele,
+                ref_allele = ref_allele
         }
     }
     call metal as metal_all_common {
@@ -238,7 +258,7 @@ task metal {
         Array[File] input_files
         String column_counting = "STRICT"
         Boolean overlap = false
-        String marker_column = "MARKER"
+        String marker = "MARKER"
         String weight_column = "N"
         String out_prefix
         String out_postfix
@@ -247,7 +267,6 @@ task metal {
         Boolean min_max_freq = false
         String std_err = "STDERR"
         String effect = "EFFECT"
-        String marker = "MARKER"
         String p_value = "PVALUE"
         String freq = "FREQ"
         String alt_allele = "ALLELE1"
@@ -259,7 +278,7 @@ task metal {
             "input_files": input_files,
             "overlap": overlap,
             "column_counting": column_counting,
-            "marker_column": marker_column,
+            "marker": marker,
             "out_prefix": out_prefix,
             "out_postfix": out_postfix,
             "scheme": scheme,
@@ -268,7 +287,6 @@ task metal {
             "std_err": std_err,
             "effect": effect,
             "custom_variables": custom_variables,
-            "marker": marker,
             "p_value": p_value,
             "freq": freq,
             "alt_allele": alt_allele,
