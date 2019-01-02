@@ -26,7 +26,7 @@ workflow bottom_line {
 
     scatter(ancestry in ancestries) {
         scatter(input_file in ancestry.input_files) {
-            String output_base_name = output_prefix + "_" + ancestry.name + "_" + input_file.dataset_name
+            String ancestry_dataset_file_name = output_prefix + "_" + ancestry.name + "_" + input_file.dataset_name
             call partition {
                 input:
                     file_column_mapping = input_file.column_mapping,
@@ -34,18 +34,18 @@ workflow bottom_line {
                     global_column_mapping = column_mapping,
                     cutoff_frequency = cutoff_frequency,
                     frequency_column = frequency_column,
-                    variants = input_file.file,
-                    variants_rare_name = output_base_name + "_rare." + output_suffix,
-                    variants_common_name  = output_base_name + "_common." + output_suffix
+                    input_file = input_file.file,
+                    variants_rare_name = ancestry_dataset_file_name + "_rare." + output_suffix,
+                    variants_common_name  = ancestry_dataset_file_name + "_common." + output_suffix
             }
         }
-        String output_base_name = output_prefix + "_" + ancestry.name
+        String ancestry_file_name = output_prefix + "_" + ancestry.name
         call pick_largest {
             input:
                 input_files = partition.variants_rare,
                 marker_column = marker_column,
                 size_column = size_column,
-                output_file_name = output_base_name + "_rare." + output_suffix
+                output_file_name = ancestry_file_name + "_rare." + output_suffix
         }
         call metal as metal_common_per_ancestry {
             input:
@@ -53,13 +53,15 @@ workflow bottom_line {
         }
     }
     call metal as metal_all_common {
+        input:
 
     }
     call metal as metal_all_rare {
+        input:
 
     }
     call concat {
-
+        input:
     }
 }
 
@@ -141,8 +143,7 @@ task partition {
         echo "=== BEGIN partition.py ==="
         cat partition.py
         echo "=== END partition.py ==="
-        python3 partition.py ~{cutoff_frequency} ~{frequency_column} ~{variants} \
-          ~{variants_rare_name} ~{variants_common_name}
+        python3 partition.py
     >>>
     output {
         File variants_rare = variants_rare_name
@@ -245,11 +246,11 @@ task metal {
         Boolean average_freq = false
         Boolean min_max_freq = false
         String std_err = "STDERR"
-        String? effect
+        String effect = "EFFECT"
         String marker = "MARKER"
         String p_value = "PVALUE"
         String freq = "FREQ"
-        String alt_allele = "ALLELE1",
+        String alt_allele = "ALLELE1"
         String ref_allele = "ALLELE2"
         Array[String] custom_variables = []
     }
@@ -349,7 +350,7 @@ task metal {
         /metal script.metal
     >>>
     output {
-        File out = glob(global_settings.out_prefix + "*" + global_settings.out_postfix)[0]
+        File out = glob(out_prefix + "*" + out_postfix)[0]
     }
 }
 
