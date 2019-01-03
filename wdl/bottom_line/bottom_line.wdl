@@ -261,7 +261,7 @@ task pick_largest {
                         union_data[marker] = row_dict
                     else:
                         union_size = float(union_entry[size_column])
-                        if(size > union_size)
+                        if(size > union_size):
                             union_data[marker] = row_dict
         with open(out_file_name, 'w') as out_file:
             out_writer = csv.writer(out_file, delimiter='\t')
@@ -374,7 +374,7 @@ task metal {
         addValue(lines, "MARKER", settings, "marker")
         addValue(lines, "PVALUE", settings, "p_value")
         addValue(lines, "FREQ", settings, "freq")
-        addTwoValues(lines, "ALLELE", fileOptions, "alt_allele", "ref_allele")
+        addTwoValues(lines, "ALLELE", settings, "alt_allele", "ref_allele")
         addCustomVariables(lines, settings, "custom_variables")
         for input_file in ["~{sep='\", \"' input_files}"]:
             addLine(lines, "PROCESS " + input_file)
