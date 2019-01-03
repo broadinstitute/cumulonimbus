@@ -251,7 +251,7 @@ task pick_largest {
                 size_column_index = header_row.index(size_column)
                 for row in in_reader:
                     marker = row[marker_column_index]
-                    size = float(row[marker_column_index])
+                    size = float(row[size_column_index])
                     if(not marker in markers):
                         marker_list.append(marker)
                         markers.add(marker)
@@ -381,7 +381,7 @@ task metal {
         addTwoValues(lines, "OUTFILE", settings, "out_prefix", "out_postfix")
         addLine(lines, "ANALYZE")
         addLine(lines, "QUIT")
-        script = reduce(lambda line1, line2: line1 + "\n" + line2, lines) + "\n"
+        script = "\n".join(lines) + "\n"
         scriptFile = open("script.metal", "w")
         scriptFile.write(script)
         scriptFile.close()
