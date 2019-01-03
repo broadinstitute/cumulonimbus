@@ -106,7 +106,7 @@ workflow bottom_line {
             average_freq = true,
             min_max_freq = true,
             std_err = std_err,
-            effect = effect,
+            effect = "Effect",
             p_value = "P-value",
             alt_allele = "Allele1",
             ref_allele = "Allele2"
