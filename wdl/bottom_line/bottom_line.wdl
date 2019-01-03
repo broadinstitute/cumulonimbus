@@ -127,15 +127,15 @@ task partition {
         String variants_common_name
     }
     File settings_file = write_json(
-        {
-            "file_column_mapping": file_column_mapping,
-            "ancestry_column_mapping": ancestry_column_mapping,
-            "global_column_mapping": global_column_mapping,
-            "cutoff_frequency": cutoff_frequency,
-            "frequency_column": frequency_column,
-            "input_file": input_file,
-            "variants_rare_name": variants_rare_name,
-            "variants_common_name": variants_common_name
+        object {
+            file_column_mapping: file_column_mapping,
+            ancestry_column_mapping: ancestry_column_mapping,
+            global_column_mapping: global_column_mapping,
+            cutoff_frequency: cutoff_frequency,
+            frequency_column: frequency_column,
+            input_file: input_file,
+            variants_rare_name: variants_rare_name,
+            variants_common_name: variants_common_name
         }
     )
     runtime {
@@ -209,11 +209,11 @@ task pick_largest {
         String output_file_name
     }
     File settings_file = write_json(
-        {
-            "input_files": input_files,
-            "marker_column": marker_column,
-            "size_column": size_column,
-            "output_file": output_file_name
+        object {
+            input_files: input_files,
+            marker_column: marker_column,
+            size_column: size_column,
+            output_file: output_file_name
         }
     )
     runtime {
@@ -304,23 +304,23 @@ task metal {
         Array[String] custom_variables = []
     }
     File settings_file = write_json(
-        {
-            "input_files": input_files,
-            "overlap": overlap,
-            "column_counting": column_counting,
-            "marker": marker,
-            "out_prefix": out_prefix,
-            "out_postfix": out_postfix,
-            "scheme": scheme,
-            "average_freq": average_freq,
-            "min_max_freq": min_max_freq,
-            "std_err": std_err,
-            "effect": effect,
-            "custom_variables": custom_variables,
-            "p_value": p_value,
-            "freq": freq,
-            "alt_allele": alt_allele,
-            "ref_allele": ref_allele
+        object {
+            input_files: input_files,
+            overlap: overlap,
+            column_counting: column_counting,
+            marker: marker,
+            out_prefix: out_prefix,
+            out_postfix: out_postfix,
+            scheme: scheme,
+            average_freq: average_freq,
+            min_max_freq: min_max_freq,
+            std_err: std_err,
+            effect: effect,
+            custom_variables: custom_variables,
+            p_value: p_value,
+            freq: freq,
+            alt_allele: alt_allele,
+            ref_allele: ref_allele
         }
     )
     runtime {
@@ -408,9 +408,9 @@ task concat {
         String output_file_name
     }
     File settings_file = write_json(
-        {
-            "input_file_names": input_files,
-            "output_file_name": output_file_name
+        object {
+            input_file_names: input_files,
+            output_file_name: output_file_name
         }
     )
     runtime {
