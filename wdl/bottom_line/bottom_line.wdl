@@ -97,9 +97,9 @@ workflow bottom_line {
             input_files = metal_common_per_ancestry.out,
             column_counting = "LENIENT",
             overlap = false,
-            marker = marker_column,
-            weight_column = size_column,
-            freq = frequency_column,
+            marker = "MarkerName",
+            weight_column = "Weight",
+            freq = "Freq1",
             out_prefix = output_prefix + "_common",
             out_postfix = "." + output_suffix,
             scheme = scheme,
@@ -107,9 +107,9 @@ workflow bottom_line {
             min_max_freq = true,
             std_err = std_err,
             effect = effect,
-            p_value = p_value,
-            alt_allele = alt_allele,
-            ref_allele = ref_allele
+            p_value = "P-value",
+            alt_allele = "Allele1",
+            ref_allele = "Allele2"
     }
     call concat {
         input:
@@ -309,6 +309,7 @@ task metal {
             overlap: overlap,
             column_counting: column_counting,
             marker: marker,
+            weight_column: weight_column,
             out_prefix: out_prefix,
             out_postfix: out_postfix,
             scheme: scheme,
@@ -367,7 +368,7 @@ task metal {
                     lines.append("LABEL " + variable + " AS " + variable)
         addLine(lines, "SEPARATOR TAB")
         addValue(lines, "SCHEME", settings, "scheme")
-        addValue(lines, "WEIGHTLABE", settings, "weight_column")
+        addValue(lines, "WEIGHTLABEL", settings, "weight_column")
         addFlag(lines, "OVERLAP", settings, "overlap")
         addFlag(lines, "AVERAGEFREQ", settings, "average_freq")
         addFlag(lines, "MINMAXFREQ", settings, "min_max_freq")

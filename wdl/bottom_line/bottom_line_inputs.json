@@ -6,7 +6,7 @@
   "bottom_line.scheme": "STDERR",
   "bottom_line.marker_column": "ID",
   "bottom_line.size_column": "NS",
-  "bottom_line.p_value": "P",
+  "bottom_line.p_value": "PVALUE",
   "bottom_line.std_err": "SEBETA",
   "bottom_line.effect": "BETA",
   "bottom_line.alt_allele": "ALT",
