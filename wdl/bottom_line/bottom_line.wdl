@@ -176,7 +176,7 @@ task partition {
             in_reader = csv.reader(in_file, delimiter='\t')
             rare_writer = csv.writer(out_file_rare, delimiter='\t')
             common_writer = csv.writer(out_file_common, delimiter='\t')
-            header_row = map(map_column_name, next(in_reader))
+            header_row = list(map(map_column_name, next(in_reader)))
             key_index = header_row.index(key)
             rare_writer.writerow(header_row)
             common_writer.writerow(header_row)
@@ -268,7 +268,7 @@ task pick_largest {
             out_writer.writerow(column_list)
             for marker in marker_list:
                 entry = union_data[marker]
-                row = map(lambda column: entry[column] or "NA", column_list)
+                row = list(map(lambda column: entry[column] or "NA", column_list))
                 out_writer.writerow(row)
         EOF
         echo "=== BEGIN union.py ==="
