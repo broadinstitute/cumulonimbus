@@ -160,7 +160,7 @@ task partition {
         global_column_mapping = settings["global_column_mapping"]
         cutoff = float(settings["cutoff_frequency"])
         key = settings["frequency_column"]
-        in_file_name = ~{input_file}
+        in_file_name = "~{input_file}"
         out_file_rare_name = settings["variants_rare_name"]
         out_file_common_name = settings["variants_common_name"]
 
