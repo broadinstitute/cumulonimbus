@@ -274,7 +274,7 @@ task pick_largest {
         echo "=== BEGIN union.py ==="
         cat union.py
         echo "=== END union.py ==="
-        python union.py
+        python3 union.py
     >>>
     output {
         File output_file = output_file_name
@@ -328,6 +328,7 @@ task metal {
     }
     command <<<
         set -e
+        python3 --version
         cat << EOF >metalcast.py
         import json
         settingsFile = open("~{settings_file}", "r")
@@ -388,7 +389,7 @@ task metal {
         echo "=== BEGIN metalcast.py ==="
         cat metalcast.py
         echo "=== END metalcast.py ==="
-        python metalcast.py
+        python3 metalcast.py
         echo "=== BEGIN script.metal ==="
         cat script.metal
         echo "=== END script.metal ==="
@@ -417,7 +418,8 @@ task concat {
     }
     command <<<
         set -e
-        cat << EOF >metalcast.py
+        python3 --version
+        cat << EOF >concat.py
         import json
         import csv
         settingsFile = open("~{settings_file}", "r")
@@ -442,6 +444,11 @@ task concat {
                     for row in in_reader:
                         out_writer.writerow(row)
         print("Done!")
+        EOF
+        echo "=== BEGIN concat.py ==="
+        cat concat.py
+        echo "=== END concat.py ==="
+        python3 concat.py
     >>>
     output {
         File output_file = output_file_name
