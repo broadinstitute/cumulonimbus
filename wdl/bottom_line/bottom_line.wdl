@@ -380,7 +380,7 @@ task metal {
             addLine(lines, "PROCESS " + input_file)
         addTwoValues(lines, "OUTFILE", settings, "out_prefix", "out_postfix")
         addLine(lines, "ANALYZE")
-        addLine("QUIT")
+        addLine(lines, "QUIT")
         script = reduce(lambda line1, line2: line1 + "\n" + line2, lines) + "\n"
         scriptFile = open("script.metal", "w")
         scriptFile.write(script)

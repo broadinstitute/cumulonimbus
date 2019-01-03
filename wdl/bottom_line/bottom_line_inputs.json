@@ -5,6 +5,7 @@
   "bottom_line.frequency_column": "MAF",
   "bottom_line.scheme": "STDERR",
   "bottom_line.marker_column": "ID",
+  "bottom_line.size_column": "NS",
   "bottom_line.p_value": "P",
   "bottom_line.std_err": "STDERR",
   "bottom_line.effect": "SEBETA",
