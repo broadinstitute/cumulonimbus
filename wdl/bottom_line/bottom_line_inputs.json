@@ -7,8 +7,8 @@
   "bottom_line.marker_column": "ID",
   "bottom_line.size_column": "NS",
   "bottom_line.p_value": "P",
-  "bottom_line.std_err": "STDERR",
-  "bottom_line.effect": "SEBETA",
+  "bottom_line.std_err": "SEBETA",
+  "bottom_line.effect": "BETA",
   "bottom_line.alt_allele": "ALT",
   "bottom_line.ref_allele": "REF",
   "bottom_line.ancestries": [

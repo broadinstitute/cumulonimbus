@@ -256,7 +256,7 @@ task pick_largest {
                         marker_list.append(marker)
                         markers.add(marker)
                     row_dict = dict(zip(header_row, row))
-                    union_entry = union_data[marker]
+                    union_entry = union_data.get(marker)
                     if(union_entry is None):
                         union_data[marker] = row_dict
                     else:
