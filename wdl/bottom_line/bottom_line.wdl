@@ -244,7 +244,7 @@ task pick_largest {
             with open(in_file_name, 'r', newline='') as in_file:
                 in_reader = csv.reader(in_file, delimiter='\t')
                 header_row = next(in_reader)
-                for column on header_row:
+                for column in header_row:
                     if not column in column_list:
                         column_list.append(column)
                 marker_column_index = header_row.index(marker_column)
@@ -361,7 +361,7 @@ task metal {
             if(variables is not None):
                 for variable in variables:
                     lines.append("CUSTOMVARIABLE " + variable)
-                    lines.append("LABEL " + variable + " AS " + variable")
+                    lines.append("LABEL " + variable + " AS " + variable)
         addLine(lines, "SEPARATOR TAB")
         addValue(lines, "SCHEME", settings, "scheme")
         addValue(lines, "WEIGHTLABE", settings, "weight_column")
