@@ -232,7 +232,7 @@ task pick_largest {
         print("=== BEGIN settings ===")
         print(json.dumps(settings, sort_keys=True, indent=4))
         print("=== END settings ===")
-        in_file_names = ["~{sep='\", \"' input_files}"]
+        in_file_names = ["~{sep='", "' input_files}"]
         marker_column = settings["marker_column"]
         size_column = settings["size_column"]
         out_file_name = settings["output_file"]
@@ -376,9 +376,9 @@ task metal {
         addValue(lines, "FREQ", settings, "freq")
         addTwoValues(lines, "ALLELE", settings, "alt_allele", "ref_allele")
         addCustomVariables(lines, settings, "custom_variables")
-        for input_file in ["~{sep='\", \"' input_files}"]:
+        for input_file in ["~{sep='", "' input_files}"]:
             addLine(lines, "PROCESS " + input_file)
-        addTwoValues(lines, "OUTFILE", globalSettings, "out_prefix", "out_postfix")
+        addTwoValues(lines, "OUTFILE", settings, "out_prefix", "out_postfix")
         addLine(lines, "ANALYZE")
         addLine("QUIT")
         script = reduce(lambda line1, line2: line1 + "\n" + line2, lines) + "\n"
@@ -428,7 +428,7 @@ task concat {
         print("=== BEGIN settings ===")
         print(json.dumps(settings, sort_keys=True, indent=4))
         print("=== END settings ===")
-        in_file_names = ["~{sep='\", \"' input_files}"]
+        in_file_names = ["~{sep='", "' input_files}"]
         out_file_name = settings["output_file_name"]
         with open(out_file_name, 'w') as out_file:
             out_writer = csv.writer(out_file, delimiter='\t')
