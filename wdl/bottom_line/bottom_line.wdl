@@ -133,7 +133,6 @@ task partition {
             global_column_mapping: global_column_mapping,
             cutoff_frequency: cutoff_frequency,
             frequency_column: frequency_column,
-            input_file: input_file,
             variants_rare_name: variants_rare_name,
             variants_common_name: variants_common_name
         }
@@ -161,7 +160,7 @@ task partition {
         global_column_mapping = settings["global_column_mapping"]
         cutoff = float(settings["cutoff_frequency"])
         key = settings["frequency_column"]
-        in_file_name = settings["input_file"]
+        in_file_name = ~{input_file}
         out_file_rare_name = settings["variants_rare_name"]
         out_file_common_name = settings["variants_common_name"]
 
@@ -210,7 +209,6 @@ task pick_largest {
     }
     File settings_file = write_json(
         object {
-            input_files: input_files,
             marker_column: marker_column,
             size_column: size_column,
             output_file: output_file_name
@@ -234,7 +232,7 @@ task pick_largest {
         print("=== BEGIN settings ===")
         print(json.dumps(settings, sort_keys=True, indent=4))
         print("=== END settings ===")
-        in_file_names = settings["input_files"]
+        in_file_names = ["~{sep='\", \"' input_files}"]
         marker_column = settings["marker_column"]
         size_column = settings["size_column"]
         out_file_name = settings["output_file"]
@@ -305,7 +303,6 @@ task metal {
     }
     File settings_file = write_json(
         object {
-            input_files: input_files,
             overlap: overlap,
             column_counting: column_counting,
             marker: marker,
@@ -378,7 +375,7 @@ task metal {
         addValue(lines, "FREQ", settings, "freq")
         addTwoValues(lines, "ALLELE", fileOptions, "alt_allele", "ref_allele")
         addCustomVariables(lines, settings, "custom_variables")
-        for input_file in settings["input_files"]:
+        for input_file in ["~{sep='\", \"' input_files}"]:
             addLine(lines, "PROCESS " + input_file)
         addTwoValues(lines, "OUTFILE", globalSettings, "out_prefix", "out_postfix")
         addLine(lines, "ANALYZE")
@@ -409,7 +406,6 @@ task concat {
     }
     File settings_file = write_json(
         object {
-            input_file_names: input_files,
             output_file_name: output_file_name
         }
     )
@@ -430,7 +426,7 @@ task concat {
         print("=== BEGIN settings ===")
         print(json.dumps(settings, sort_keys=True, indent=4))
         print("=== END settings ===")
-        in_file_names = settings["input_file_names"]
+        in_file_names = ["~{sep='\", \"' input_files}"]
         out_file_name = settings["output_file_name"]
         with open(out_file_name, 'w') as out_file:
             out_writer = csv.writer(out_file, delimiter='\t')
