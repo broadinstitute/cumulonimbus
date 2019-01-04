@@ -203,6 +203,51 @@ task partition {
     }
 }
 
+task merge_metal_schemes {
+    input {
+        File metal_samplesize
+        File metal_stderr
+        String out_file_name
+        String marker_column = "MarkerName"
+        String stderr_column = "StdErr"
+        String effect_column = "Effect"
+    }
+    runtime {
+        docker: "us.gcr.io/broad-gdr-dig-storage/metal-python:2018-08-28"
+        cpu: 1
+        memory: "3 GB"
+        disks: "local-disk 20 HDD"
+    }
+    command <<<
+        set -e
+        python3 --version
+        cat << EOF > merge.py
+        samplesize_file_name = "~{metal_samplesize}"
+        stderr_file_name = "~{metal_stderr}"
+        out_file_name = "~{out_file_name}"
+        marker_header = "~{marker_column}"
+        stderr_header = "~{stderr_column}"
+        effect_header = "~{effect_column}"
+        with open(samplesize_file_name, 'r', newline='') as samplesize_file, \
+                open(stderr_file_name, 'r', newline='') as stderr_file, \
+                open(out_file_name, 'w', newline='') as out_file, \:
+            stderr_reader = csv.reader(stderr_file, delimiter='\t')
+            stderr_header_row = next(stderr_reader)
+            marker_col_index = header_row.index(marker_header)
+            stderr_col_index = header_row.index(stderr_header)
+            effect_col_index = header_row.index(effect_header)
+            stderr_dict = {}
+        EOF
+        echo "=== BEGIN merge.py ==="
+        cat merge.py
+        echo "=== END merge.py ==="
+        python3 merge.py
+    >>>
+    output {
+        File out = out_file_name
+    }
+}
+
 task pick_largest {
     input {
         Array[File] input_files
