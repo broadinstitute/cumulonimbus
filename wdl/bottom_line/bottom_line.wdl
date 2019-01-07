@@ -46,14 +46,7 @@ workflow bottom_line {
             }
         }
         String ancestry_file_name = output_prefix + "_" + ancestry.name
-        call pick_largest {
-            input:
-                input_files = partition.variants_rare,
-                marker_column = marker_column,
-                size_column = size_column,
-                output_file_name = ancestry_file_name + "_rare." + output_suffix
-        }
-        call metal as metal_common_per_ancestry {
+        call metal as metal_samplesize_per_ancestry {
             input:
                 input_files = partition.variants_common,
                 column_counting = "LENIENT",
@@ -61,7 +54,7 @@ workflow bottom_line {
                 marker = marker_column,
                 weight_column = size_column,
                 freq = frequency_column,
-                out_prefix = ancestry_file_name + "_common",
+                out_prefix = ancestry_file_name + "_common_samplesize",
                 out_postfix = "." + output_suffix,
                 scheme = "SAMPLESIZE",
                 average_freq = true,
@@ -72,37 +65,50 @@ workflow bottom_line {
                 alt_allele = alt_allele,
                 ref_allele = ref_allele
         }
+        call metal as metal_stderr_per_ancestry {
+            input:
+                input_files = partition.variants_common,
+                column_counting = "LENIENT",
+                overlap = true,
+                marker = marker_column,
+                weight_column = size_column,
+                freq = frequency_column,
+                out_prefix = ancestry_file_name + "_common_stderr",
+                out_postfix = "." + output_suffix,
+                scheme = "STDERR",
+                average_freq = true,
+                min_max_freq = true,
+                std_err = std_err,
+                effect = effect,
+                p_value = p_value,
+                alt_allele = alt_allele,
+                ref_allele = ref_allele
+        }
+        call merge_metal_schemes as merge_metal_schemes_per_ancestry{
+            input:
+                metal_samplesize = metal_samplesize_per_ancestry.out_file,
+                metal_stderr = metal_stderr_per_ancestry.out_file,
+                out_file_name = ancestry_file_name + "_common_merged." + output_suffix
+        }
+        call pick_largest {
+            input:
+                input_files = flatten(partition.variants_rare, [merge_metal_schemes_per_ancestry.out]),
+                marker_column = marker_column,
+                size_column = size_column,
+                output_file_name = ancestry_file_name + "_picked." + output_suffix
+        }
     }
-    call metal as metal_all_rare {
+    call metal as metal_samplesize {
         input:
             input_files = pick_largest.output_file,
-            column_counting = "LENIENT",
-            overlap = false,
-            marker = marker_column,
-            weight_column = size_column,
-            freq = frequency_column,
-            out_prefix = output_prefix + "_rare",
-            out_postfix = "." + output_suffix,
-            scheme = scheme,
-            average_freq = true,
-            min_max_freq = true,
-            std_err = std_err,
-            effect = effect,
-            p_value = p_value,
-            alt_allele = alt_allele,
-            ref_allele = ref_allele
-    }
-    call metal as metal_all_common {
-        input:
-            input_files = metal_common_per_ancestry.out,
             column_counting = "LENIENT",
             overlap = false,
             marker = "MarkerName",
             weight_column = "Weight",
             freq = "Freq1",
-            out_prefix = output_prefix + "_common",
+            out_prefix = output_prefix + "_samplesize",
             out_postfix = "." + output_suffix,
-            scheme = scheme,
+            scheme = "SAMPLESIZE",
             average_freq = true,
             min_max_freq = true,
             std_err = std_err,
@@ -111,10 +117,30 @@ workflow bottom_line {
             alt_allele = "Allele1",
             ref_allele = "Allele2"
     }
-    call concat {
+    call metal as metal_stderr {
         input:
-            input_files = [metal_all_common.out, metal_all_rare.out],
-            output_file_name = output_prefix + "." + output_suffix
+            input_files = pick_largest.output_file,
+            column_counting = "LENIENT",
+            overlap = false,
+            marker = "MarkerName",
+            weight_column = "Weight",
+            freq = "Freq1",
+            out_prefix = output_prefix + "_samplesize",
+            out_postfix = "." + output_suffix,
+            scheme = "STDERR",
+            average_freq = true,
+            min_max_freq = true,
+            std_err = std_err,
+            effect = "Effect",
+            p_value = "P-value",
+            alt_allele = "Allele1",
+            ref_allele = "Allele2"
+    }
+    call merge_metal_schemes as merge_metal_schemes_per_ancestry {
+        input:
+            metal_samplesize = metal_samplesize.out_file,
+            metal_stderr = metal_stderr.out_file,
+            out_file_name = output_prefix + "." + output_suffix
     }
 }
 
