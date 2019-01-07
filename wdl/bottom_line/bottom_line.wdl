@@ -228,15 +228,34 @@ task merge_metal_schemes {
         marker_header = "~{marker_column}"
         stderr_header = "~{stderr_column}"
         effect_header = "~{effect_column}"
-        with open(samplesize_file_name, 'r', newline='') as samplesize_file, \
-                open(stderr_file_name, 'r', newline='') as stderr_file, \
-                open(out_file_name, 'w', newline='') as out_file, \:
+        stderr_dict = {}
+        with open(stderr_file_name, 'r', newline='') as stderr_file:
             stderr_reader = csv.reader(stderr_file, delimiter='\t')
             stderr_header_row = next(stderr_reader)
             marker_col_index = header_row.index(marker_header)
             stderr_col_index = header_row.index(stderr_header)
             effect_col_index = header_row.index(effect_header)
-            stderr_dict = {}
+            for row in stderr_reader:
+                marker = row[marker_col_index]
+                effect = row[effect_col_index]
+                stderr = row[stderr_col_index]
+                stderr_dict[marker] = {stderr_header: stderr, effect_header: effect}
+        with open(samplesize_file_name, 'r', newline='') as samplesize_file, \
+                open(out_file_name, 'w', newline='') as out_file:
+            samplesize_reader = csv.reader(samplesize_file, delimiter='\t')
+            out_writer = csv.writer(out_file, delimiter='\t')
+            samplesize_header_row = next(samplesize_reader)
+            marker_col_index = samplesize_header_row.index(marker_header)
+            out_header_row = samplesize_header_row + [stderr_header, effect_header]
+            out_writer.writerow(out_header_row)
+            for row in samplesize_reader:
+                marker = row[marker_col_index]
+                stderr_data = stderr_dict[marker]
+                del stderr_dict[marker]
+                stderr = stderr_data[stderr_header]
+                effect = stderr_data[effect_header]
+                out_row = row + [stderr, effect]
+                out_writer.writerow(out_row)
         EOF
         echo "=== BEGIN merge.py ==="
         cat merge.py
