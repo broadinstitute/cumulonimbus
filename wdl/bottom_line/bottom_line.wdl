@@ -92,7 +92,8 @@ workflow bottom_line {
         }
         call pick_largest {
             input:
-                input_files = flatten(partition.variants_rare, [merge_metal_schemes_per_ancestry.out]),
+                input_files = partition.variants_rare,
+                metal_file = merge_metal_schemes_per_ancestry.out,
                 marker_column = marker_column,
                 size_column = size_column,
                 output_file_name = ancestry_file_name + "_picked." + output_suffix
@@ -295,18 +296,19 @@ task merge_metal_schemes {
 
 task pick_largest {
     input {
-        Array[File] input_files
-        String marker_column
-        String size_column
+        Array[File] rare_variants_files
+        File metal_file
+        String marker_col
         String output_file_name
+        String frequency_col = "FREQ"
+        String marker_col = "MARKER"
+        String size_col = "N"
+        String std_err_col = "STDERR"
+        String effect_col = "EFFECT"
+        String p_value_col = "PVALUE"
+        String alt_allele_col = "ALLELE1"
+        String ref_allele_col = "ALLELE2"
     }
-    File settings_file = write_json(
-        object {
-            marker_column: marker_column,
-            size_column: size_column,
-            output_file: output_file_name
-        }
-    )
     runtime {
         docker: "us.gcr.io/broad-gdr-dig-storage/metal-python:2018-08-28"
         cpu: 1
@@ -317,23 +319,43 @@ task pick_largest {
         set -e
         python3 --version
         cat << EOF > union.py
-        import json
         import csv
-        settingsFile = open("~{settings_file}", "r")
-        settings = json.load(settingsFile)
-        settingsFile.close()
-        print("=== BEGIN settings ===")
-        print(json.dumps(settings, sort_keys=True, indent=4))
-        print("=== END settings ===")
-        in_file_names = ["~{sep='", "' input_files}"]
-        marker_column = settings["marker_column"]
-        size_column = settings["size_column"]
-        out_file_name = settings["output_file"]
+        rare_variants_file_names = ["~{sep='", "' rare_variants_files}"]
+        metal_file = ~{metal_file}
+        marker_col = "MarkerName"
+        frequency_col = "Freq1"
+        out_col_list = [marker_col, "Weight", frequency_col, StdErr", "Effect", "P-value", "Allele1", "Allele2"]
+        metal_col_list = out_col_list
+        rare_col_list = ["~{marker_col}", "~{size_col}", "~{frequency_col}", "~{std_err_col}",
+                         "~{effect_col}", "~{p_value_col}", "~{alt_allele_col}", "~{ref_allele_col}"]
+        metal_col_dict = dict(zip(metal_col_list, out_col_list))
+        rare_col_dict = dict(zip(rare_col_list, out_col_list))
         marker_list = []
         markers = set(marker_list)
-        column_list = []
         union_data = {}
-        for in_file_name in in_file_names:
+
+        def read_file(in_file_name, file_col_dict):
+            with open(in_file_name, "r", newline="") as in_file:
+                in_reader = csv.reader(in_file, delimiter='\t')
+                header_row = next(in_reader)
+                col_to_index = {}
+                for index, header in enumerate(header_row):
+                    out_header = file_col_dict.get(header)
+                    if out_header is not None:
+                        col_to_index[out_header] = index
+                 for row in in_reader:
+                    row_data = {col: row(index) for col, index in col_to_index}
+                    marker = row_data[marker_col]
+                    union_entry = union_data.get(marker)
+                    if union_entry is not None:
+                        union_data[marker] = row_data
+                    else:
+                        row_frequency = float(row_data[frequency_col])
+                        # to be continued
+
+
+
+        for in_file_name in rare_variants_file_names:
             with open(in_file_name, 'r', newline='') as in_file:
                 in_reader = csv.reader(in_file, delimiter='\t')
                 header_row = next(in_reader)
