@@ -68,7 +68,7 @@ workflow bottom_line {
             input:
                 input_files = partition.variants_common,
                 column_counting = "LENIENT",
-                overlap = true,
+                overlap = false,
                 marker_col = marker_col,
                 weight_col = size_col,
                 frequency_col = frequency_col,
@@ -94,8 +94,14 @@ workflow bottom_line {
                 rare_variants_files = partition.variants_rare,
                 metal_file = merge_metal_schemes_per_ancestry.out,
                 marker_col = marker_col,
+                frequency_col = frequency_col,
                 size_col = size_col,
-                output_file_name = ancestry_file_name + "_picked." + output_suffix
+                stderr_col = stderr_col,
+                effect_col = effect_col,
+                p_value_col = p_value_col,
+                alt_allele_col = alt_allele_col,
+                ref_allele_col = ref_allele_col,
+                out_file_name = ancestry_file_name + "_picked." + output_suffix
         }
     }
     call metal as metal_samplesize {
@@ -248,6 +254,7 @@ task merge_metal_schemes {
         set -e
         python3 --version
         cat << EOF > merge.py
+        import csv
         samplesize_file_name = "~{metal_samplesize}"
         stderr_file_name = "~{metal_stderr}"
         out_file_name = "~{out_file_name}"
@@ -258,9 +265,9 @@ task merge_metal_schemes {
         with open(stderr_file_name, 'r', newline='') as stderr_file:
             stderr_reader = csv.reader(stderr_file, delimiter='\t')
             stderr_header_row = next(stderr_reader)
-            marker_col_index = header_row.index(marker_header)
-            stderr_col_index = header_row.index(stderr_header)
-            effect_col_index = header_row.index(effect_header)
+            marker_col_index = stderr_header_row.index(marker_header)
+            stderr_col_index = stderr_header_row.index(stderr_header)
+            effect_col_index = stderr_header_row.index(effect_header)
             for row in stderr_reader:
                 marker = row[marker_col_index]
                 effect = row[effect_col_index]
@@ -297,7 +304,7 @@ task pick_largest {
     input {
         Array[File] rare_variants_files
         File metal_file
-        String output_file_name
+        String out_file_name
         String frequency_col = "FREQ"
         String marker_col = "MARKER"
         String size_col = "N"
@@ -319,10 +326,10 @@ task pick_largest {
         cat << EOF > union.py
         import csv
         rare_variants_file_names = ["~{sep='", "' rare_variants_files}"]
-        metal_file = ~{metal_file}
+        metal_file = "~{metal_file}"
         marker_col = "MarkerName"
         frequency_col = "Freq1"
-        out_col_list = [marker_col, "Weight", frequency_col, StdErr", "Effect", "P-value", "Allele1",
+        out_col_list = [marker_col, "Weight", frequency_col, "StdErr", "Effect", "P-value", "Allele1",
                         "Allele2"]
         metal_col_list = out_col_list
         rare_col_list = ["~{marker_col}", "~{size_col}", "~{frequency_col}", "~{stderr_col}",
@@ -342,11 +349,11 @@ task pick_largest {
                     out_header = file_col_dict.get(header)
                     if out_header is not None:
                         col_to_index[out_header] = index
-                 for row in in_reader:
-                    row_data = {col: row(index) for col, index in col_to_index}
+                for row in in_reader:
+                    row_data = {col: row[index] for col, index in col_to_index.items() }
                     marker = row_data[marker_col]
                     union_entry = union_data.get(marker)
-                    if union_entry is not None:
+                    if union_entry is None:
                         union_data[marker] = row_data
                     else:
                         row_frequency = float(row_data[frequency_col])
@@ -357,7 +364,8 @@ task pick_largest {
 
         for in_file_name in rare_variants_file_names:
             read_file(in_file_name, rare_col_dict)
-        read_file(metal_fine, metal_col_dict)
+        read_file(metal_file, metal_col_dict)
+        out_file_name = "~{out_file_name}"
         with open(out_file_name, 'w') as out_file:
             out_writer = csv.writer(out_file, delimiter='\t')
             out_writer.writerow(out_col_list)
@@ -372,7 +380,7 @@ task pick_largest {
         python3 union.py
     >>>
     output {
-        File output_file = output_file_name
+        File output_file = out_file_name
     }
 }
 
