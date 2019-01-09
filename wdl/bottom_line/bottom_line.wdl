@@ -128,7 +128,7 @@ workflow bottom_line {
             input_files = pick_largest.output_file,
             column_counting = "LENIENT",
             overlap = false,
-            out_prefix = output_prefix + "_samplesize",
+            out_prefix = output_prefix + "_stderr",
             out_postfix = "." + output_suffix,
             scheme = "STDERR",
             average_freq = true,
