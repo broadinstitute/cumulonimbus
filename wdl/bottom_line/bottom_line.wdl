@@ -117,7 +117,7 @@ workflow bottom_line {
             marker_col = "MarkerName",
             weight_col = "Weight",
             frequency_col = "Freq1",
-            stderr_col = stderr_col,
+            stderr_col = "StdErr",
             effect_col = "Effect",
             p_value_col = "P-value",
             alt_allele_col = "Allele1",
@@ -136,7 +136,7 @@ workflow bottom_line {
             marker_col = "MarkerName",
             weight_col = "Weight",
             frequency_col = "Freq1",
-            stderr_col = stderr_col,
+            stderr_col = "StdErr",
             effect_col = "Effect",
             p_value_col = "P-value",
             alt_allele_col = "Allele1",
@@ -352,6 +352,9 @@ task pick_largest {
                 for row in in_reader:
                     row_data = {col: row[index] for col, index in col_to_index.items() }
                     marker = row_data[marker_col]
+                    if marker not in markers:
+                        marker_list.append(marker)
+                        markers.add(marker)
                     union_entry = union_data.get(marker)
                     if union_entry is None:
                         union_data[marker] = row_data
