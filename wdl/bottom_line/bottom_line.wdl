@@ -283,12 +283,13 @@ task merge_metal_schemes {
             out_writer.writerow(out_header_row)
             for row in samplesize_reader:
                 marker = row[marker_col_index]
-                stderr_data = stderr_dict[marker]
-                del stderr_dict[marker]
-                stderr = stderr_data[stderr_header]
-                effect = stderr_data[effect_header]
-                out_row = row + [stderr, effect]
-                out_writer.writerow(out_row)
+                if marker in stderr_dict:
+                    stderr_data = stderr_dict[marker]
+                    del stderr_dict[marker]
+                    stderr = stderr_data[stderr_header]
+                    effect = stderr_data[effect_header]
+                    out_row = row + [stderr, effect]
+                    out_writer.writerow(out_row)
         EOF
         echo "=== BEGIN merge.py ==="
         cat merge.py
