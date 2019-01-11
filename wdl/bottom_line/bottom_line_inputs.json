@@ -2,33 +2,21 @@
   "bottom_line.output_prefix": "results",
   "bottom_line.output_suffix": "vassoc",
   "bottom_line.cutoff_frequency": "0.05",
-  "bottom_line.frequency_col": "MAF",
-  "bottom_line.marker_col": "ID",
-  "bottom_line.size_col": "NS",
-  "bottom_line.p_value_col": "PVALUE",
-  "bottom_line.stderr_col": "SEBETA",
-  "bottom_line.effect_col": "BETA",
-  "bottom_line.alt_allele_col": "ALT",
-  "bottom_line.ref_allele_col": "REF",
+  "bottom_line.frequency_col": "maf",
+  "bottom_line.marker_col": "varId",
+  "bottom_line.size_col": "n",
+  "bottom_line.p_value_col": "pValue",
+  "bottom_line.stderr_col": "stdErr",
+  "bottom_line.effect_col": "beta",
+  "bottom_line.alt_allele_col": "alt",
+  "bottom_line.ref_allele_col": "reference",
   "bottom_line.ancestries": [
     {
-      "name": "sa",
+      "name": "ea",
       "input_files": [
         {
-          "file": "gs://broad-gdr-dig-caas-stuff/metal_input/t2d_gwas_small/t2d_sa.sl_13k.ln_bmi_anal.vassoc",
-          "dataset_name": "sl_13k"
-        },
-        {
-          "file": "gs://broad-gdr-dig-caas-stuff/metal_input/t2d_gwas_small/t2d_sa.sp_29k.ln_bmi_anal.vassoc",
-          "dataset_name": "sp_29k"
-        },
-        {
-          "file": "gs://broad-gdr-dig-caas-stuff/metal_input/t2d_gwas_small/t2d_sa.ss_29k.ln_bmi_anal.vassoc",
-          "dataset_name": "ss_29k"
-        },
-        {
-          "file": "gs://broad-gdr-dig-caas-stuff/metal_input/t2d_gwas_small/t2d_sa.ss_13k.ln_bmi_anal.vassoc",
-          "dataset_name": "ss_13k"
+          "file": "gs://broad-gdr-dig-caas-stuff/metal_input/t2d_gwas/gwas_dcsp2_ea.vassoc",
+          "dataset_name": "gwas_dcsp2"
         }
       ]
     },
@@ -36,24 +24,8 @@
       "name": "ea",
       "input_files": [
         {
-          "file": "gs://broad-gdr-dig-caas-stuff/metal_input/t2d_gwas_small/t2d_ea.eh_29k.ln_bmi_anal.vassoc",
-          "dataset_name": "eh_29k"
-        },
-        {
-          "file": "gs://broad-gdr-dig-caas-stuff/metal_input/t2d_gwas_small/t2d_ea.ek_29k.ln_bmi_anal.vassoc",
-          "dataset_name": "ek_29k"
-        },
-        {
-          "file": "gs://broad-gdr-dig-caas-stuff/metal_input/t2d_gwas_small/t2d_ea.ek_13k.ln_bmi_anal.vassoc",
-          "dataset_name": "ek_13k"
-        },
-        {
-          "file": "gs://broad-gdr-dig-caas-stuff/metal_input/t2d_gwas_small/t2d_ea.es_29k.ln_bmi_anal.vassoc",
-          "dataset_name": "es_29k"
-        },
-        {
-          "file": "gs://broad-gdr-dig-caas-stuff/metal_input/t2d_gwas_small/t2d_ea.es_13k.ln_bmi_anal.vassoc",
-          "dataset_name": "es_13k"
+          "file": "gs://broad-gdr-dig-caas-stuff/metal_input/t2d_gwas/gwas_metsim_eu.vassoc",
+          "dataset_name": "gwas_metsim"
         }
       ]
     },
@@ -61,78 +33,8 @@
       "name": "hs",
       "input_files": [
         {
-          "file": "gs://broad-gdr-dig-caas-stuff/metal_input/t2d_gwas_small/t2d_hs.ha_13k.ln_bmi_anal.vassoc",
-          "dataset_name": "ha_13k"
-        },
-        {
-          "file": "gs://broad-gdr-dig-caas-stuff/metal_input/t2d_gwas_small/t2d_hs.hs_29k.ln_bmi_anal.vassoc",
-          "dataset_name": "hs_29k"
-        },
-        {
-          "file": "gs://broad-gdr-dig-caas-stuff/metal_input/t2d_gwas_small/t2d_hs.hs_13k.ln_bmi_anal.vassoc",
-          "dataset_name": "hs_13k"
-        },
-        {
-          "file": "gs://broad-gdr-dig-caas-stuff/metal_input/t2d_gwas_small/t2d_hs.sigma_29k.ln_bmi_anal.vassoc",
-          "dataset_name": "es_13k"
-        },
-        {
-          "file": "gs://broad-gdr-dig-caas-stuff/metal_input/t2d_gwas_small/t2d_hs.sigma_13k.ln_bmi_anal.vassoc",
-          "dataset_name": "sigma_13k"
-        }
-      ]
-    },
-    {
-      "name": "aa",
-      "input_files": [
-        {
-          "file": "gs://broad-gdr-dig-caas-stuff/metal_input/t2d_gwas_small/t2d_aa.aj_13k.ln_bmi_anal.vassoc",
-          "dataset_name": "aj_13k"
-        },
-        {
-          "file": "gs://broad-gdr-dig-caas-stuff/metal_input/t2d_gwas_small/t2d_aa.aw_13k.ln_bmi_anal.vassoc",
-          "dataset_name": "aw_13k"
-        },
-        {
-          "file": "gs://broad-gdr-dig-caas-stuff/metal_input/t2d_gwas_small/t2d_aa.aa_esp.ln_bmi_anal.vassoc",
-          "dataset_name": "aa_esp"
-        },
-        {
-          "file": "gs://broad-gdr-dig-caas-stuff/metal_input/t2d_gwas_small/t2d_aa.ab_29k.ln_bmi_anal.vassoc",
-          "dataset_name": "ab_29k"
-        }
-      ]
-    },
-    {
-      "name": "eu",
-      "input_files": [
-        {
-          "file": "gs://broad-gdr-dig-caas-stuff/metal_input/t2d_gwas_small/t2d_eu.eu_esp.ln_bmi_anal.vassoc",
-          "dataset_name": "eu_esp"
-        },
-        {
-          "file": "gs://broad-gdr-dig-caas-stuff/metal_input/t2d_gwas_small/t2d_eu.got2d.ln_bmi_anal.vassoc",
-          "dataset_name": "got2d"
-        },
-        {
-          "file": "gs://broad-gdr-dig-caas-stuff/metal_input/t2d_gwas_small/t2d_eu.lucamp.ln_bmi_anal.vassoc",
-          "dataset_name": "lucamp"
-        },
-        {
-          "file": "gs://broad-gdr-dig-caas-stuff/metal_input/t2d_gwas_small/t2d_eu.ua_13k.ln_bmi_anal.vassoc",
-          "dataset_name": "ua_13k"
-        },
-        {
-          "file": "gs://broad-gdr-dig-caas-stuff/metal_input/t2d_gwas_small/t2d_eu.uf_29k.ln_bmi_anal.vassoc",
-          "dataset_name": "uf_29k"
-        },
-        {
-          "file": "gs://broad-gdr-dig-caas-stuff/metal_input/t2d_gwas_small/t2d_eu.ug_29k.ln_bmi_anal.vassoc",
-          "dataset_name": "ug_29k"
-        },
-        {
-          "file": "gs://broad-gdr-dig-caas-stuff/metal_input/t2d_gwas_small/t2d_eu.um_13k.ln_bmi_anal.vassoc",
-          "dataset_name": "um_13k"
+          "file": "gs://broad-gdr-dig-caas-stuff/metal_input/t2d_gwas/gwas_sigma1_hs.vassoc",
+          "dataset_name": "gwas_sigma1"
         }
       ]
     }
