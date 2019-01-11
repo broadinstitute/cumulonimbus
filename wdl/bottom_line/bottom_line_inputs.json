@@ -21,7 +21,7 @@
       ]
     },
     {
-      "name": "ea",
+      "name": "eu",
       "input_files": [
         {
           "file": "gs://broad-gdr-dig-caas-stuff/metal_input/t2d_gwas/gwas_metsim_eu.vassoc",
