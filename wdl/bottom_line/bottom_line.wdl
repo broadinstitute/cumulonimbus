@@ -318,7 +318,7 @@ task pick_largest {
     runtime {
         docker: "us.gcr.io/broad-gdr-dig-storage/metal-python:2018-08-28"
         cpu: 1
-        memory: "3 GB"
+        memory: "5 GB"
         disks: "local-disk 20 HDD"
     }
     command <<<
