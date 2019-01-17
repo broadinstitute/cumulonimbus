@@ -37,6 +37,19 @@
           "dataset_name": "gwas_sigma1"
         }
       ]
+    },
+    {
+      "name": "mixed",
+      "input_files": [
+        {
+          "file": "gs://broad-gdr-dig-caas-stuff/metal_input/t2d_gwas/exchip_camp_mixed.vassoc",
+          "dataset_name": "exchip_camp"
+        },
+        {
+          "file": "gs://broad-gdr-dig-caas-stuff/metal_input/t2d_gwas/gwas_fusion_mixed.vassoc",
+          "dataset_name": "gwas_fusion"
+        }
+      ]
     }
   ]
 }
