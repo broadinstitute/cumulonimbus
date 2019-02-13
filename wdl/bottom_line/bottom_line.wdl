@@ -330,7 +330,8 @@ task pick_largest {
         metal_file = "~{metal_file}"
         marker_col = "MarkerName"
         frequency_col = "Freq1"
-        out_col_list = [marker_col, "Weight", frequency_col, "StdErr", "Effect", "P-value", "Allele1",
+        weight_col = "Weight"
+        out_col_list = [marker_col, weight_col, frequency_col, "StdErr", "Effect", "P-value", "Allele1",
                         "Allele2"]
         metal_col_list = out_col_list
         rare_col_list = ["~{marker_col}", "~{size_col}", "~{frequency_col}", "~{stderr_col}",
@@ -360,9 +361,9 @@ task pick_largest {
                     if union_entry is None:
                         union_data[marker] = row_data
                     else:
-                        row_frequency = float(row_data[frequency_col])
-                        union_frequency = float(union_entry[frequency_col])
-                        if row_frequency > union_frequency:
+                        row_weight = float(row_data[weight_col])
+                        union_weight = float(union_entry[weight_col])
+                        if row_weight > union_weight:
                             union_data[marker] = row_data
 
 

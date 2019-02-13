@@ -1,0 +1,21 @@
+{
+  "wrapper_file": {
+    "scion.eval": "load",
+    "file": "wrapper.wdl"
+  },
+  "insert_file": {
+    "scion.eval": "load",
+    "file": "insert.py"
+  },
+  "combined_content": {
+    "scion.eval": "insert",
+    "after": "<FILE",
+    "template": ".wrapper_file",
+    "insert": ".insert_file"
+  },
+  "out_file": {
+    "scion.eval": "save",
+    "file": "combined.wdl",
+    "content": ".combined_content"
+  }
+}

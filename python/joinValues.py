@@ -8,6 +8,9 @@ file_name2 = sys.argv[4]
 id_header2 = sys.argv[5]
 value_header2 = sys.argv[6]
 file_name_out = sys.argv[7]
+id_header_out = sys.argv[8]
+value_header1_out = sys.argv[9]
+value_header2_out = sys.argv[10]
 
 with open(file_name1, "r", newline="") as file1, \
         open(file_name2, "r", newline="") as file2, \
@@ -22,7 +25,7 @@ with open(file_name1, "r", newline="") as file1, \
     id_index2 = header_row2.index(id_header2)
     value_index2 = header_row2.index(value_header2)
 
-    header_row_out = [id_header1, value_header1 + "1", value_header1 + "2"]
+    header_row_out = [id_header_out, value_header1_out, value_header2_out]
     writer.writerow(header_row_out)
 
     def next_or_none(iterator):
