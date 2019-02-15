@@ -1,22 +1,22 @@
 {
   "scion:tag": "simple_insert",
   "wrapper_file": {
-    "scion.eval": "load",
+    "scion:eval": "load",
     "file": "wrapper.wdl"
   },
   "insert_file": {
-    "scion.eval": "load",
+    "scion:eval": "load",
     "file": "insert.py"
   },
   "combined_content": {
-    "scion.eval": "insert",
+    "scion:eval": "insert",
     "after": "<FILE",
-    "template": "simple_insert:wrapper_file",
-    "insert": "simple_insert:insert_file"
+    "scion:import:template": "simple_insert:wrapper_file",
+    "scion:import:insert": "simple_insert:insert_file"
   },
   "out_file": {
-    "scion.eval": "save",
+    "scion:eval": "save",
     "file": "combined.wdl",
-    "content": "simple_insert:combined_content"
+    "scion:import:content": "simple_insert:combined_content"
   }
 }
