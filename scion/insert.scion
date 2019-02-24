@@ -11,12 +11,16 @@
   "combined_content": {
     "scion:eval": "insert",
     "after": "<FILE",
-    "scion:import:template": "simple_insert:wrapper_file",
-    "scion:import:insert": "simple_insert:insert_file"
+    "scion:import": {
+      "template": "tag:simple_insert:wrapper_file",
+      "insert": "tag:simple_insert:insert_file"
+    }
   },
   "out_file": {
     "scion:eval": "save",
     "file": "combined.wdl",
-    "scion:import:content": "simple_insert:combined_content"
+    "scion:import": {
+      "content": "tag:simple_insert:combined_content"
+    }
   }
 }
