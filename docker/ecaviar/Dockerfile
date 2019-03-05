@@ -23,4 +23,4 @@ RUN git clone https://github.com/fhormoz/caviar.git
 RUN cd caviar/CAVIAR-C++ && make && chmod +x eCAVIAR
 
 # link to eCAVIAR
-RUN ln -s caviar/CAVIAR-C++/eCAVIAR /usr/local/bin/eCAVIAR
+RUN ln -s /work/caviar/CAVIAR-C++/eCAVIAR /usr/local/bin/eCAVIAR
