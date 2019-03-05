@@ -16,7 +16,7 @@ RUN wget http://s3.amazonaws.com/plink1-assets/plink_linux_x86_64_20181202.zip &
 RUN apt update && apt -y install python3
 
 # install cmake
-RUN apt update && apt -y install g++ cmake git libgsl-dev
+RUN apt update && apt -y install g++ cmake git libgsl-dev liblapack3 libblas3
 
 # install eCAVIAR
 RUN git clone https://github.com/fhormoz/caviar.git
