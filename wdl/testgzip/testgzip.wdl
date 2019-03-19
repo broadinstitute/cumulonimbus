@@ -19,7 +19,7 @@ task gzip {
    gzip ${in} -c >${out_name}
  }
  runtime {
-   docker: "ubuntu:16.04"
+   docker: "gcr.io/broad-gdr-dig-storage/cumulonimbus-ecaviar:190319"
    cpu: 1
    memory: "3 GB"
    disks: "local-disk 20 HDD"
