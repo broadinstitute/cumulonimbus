@@ -15,7 +15,7 @@ RUN wget http://s3.amazonaws.com/plink1-assets/plink_linux_x86_64_20181202.zip &
 
 RUN apt update && apt -y install python3
 
-# install cmake
+# install eCAVIAR prerequisites
 RUN apt update && apt -y install g++ cmake git libgsl-dev liblapack3 liblapack-dev libblas3 libblas-dev
 
 # install eCAVIAR
