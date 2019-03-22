@@ -7,7 +7,7 @@ workflow correlations {
     String chromosome
     Int regionStart
     Int regionEnd
-    String out_file_name
+    String out_file_base_name
   }
   String region_file_name = "region.vcf"
 
@@ -24,7 +24,7 @@ workflow correlations {
   call calculate_correlations {
     input:
       variants = select_region.out_file,
-      out_file_name = out_file_name
+      out_file_base_name = out_file_base_name
   }
 }
 
@@ -44,7 +44,7 @@ task select_region {
     disks: "local-disk 20 HDD"
   }
   command <<<
-    tabix -h variants ~{chromosome}:~{regionStart}-~{regionEnd} >~{out_file_name}
+    tabix -h ~{variants} ~{chromosome}:~{regionStart}-~{regionEnd} >~{out_file_name}
   >>>
   output {
     File out_file = out_file_name
@@ -54,7 +54,7 @@ task select_region {
 task calculate_correlations {
   input {
     File variants
-    String out_file_name
+    String out_file_base_name
   }
   runtime {
     docker: "us.gcr.io/broad-gdr-dig-storage/tabix-plink:2019-03-01"
@@ -63,9 +63,9 @@ task calculate_correlations {
     disks: "local-disk 20 HDD"
   }
   command <<<
-    plink --vcf ~{variants} --r --matrix >~{out_file_name}
+    plink --vcf ~{variants} --r --matrix --out ~{out_file_base_name}
   >>>
   output {
-    File out_file = out_file_name
+    File out_file = out_file_base_name + ".ld"
   }
 }
