@@ -1,0 +1,9 @@
+{
+  "correlations.variants": "gs://oliver-cromwell/data/correlations/toy/data.chr22.vcf.gz",
+  "correlations.index": "gs://oliver-cromwell/data/correlations/toy/data.chr22.vcf.gz.tbi",
+  "correlations.chromosome": "22",
+  "correlations.regionStart": "1",
+  "correlations.regionEnd": "16052000",
+  "correlations.out_file_base_name": "correlations"
+}
+
