@@ -63,7 +63,7 @@ task calculate_correlations {
     disks: "local-disk 20 HDD"
   }
   command <<<
-    plink --vcf ~{variants} --r --matrix --out ~{out_file_base_name}
+    plink --vcf ~{variants} --a1-allele ~{variants} 4 3 '#' --r --matrix --out ~{out_file_base_name}
   >>>
   output {
     File out_file = out_file_base_name + ".ld"
