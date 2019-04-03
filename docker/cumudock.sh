@@ -3,11 +3,11 @@ cmd=$1
 name=$2
 tag=$3
 if [[ -z ${cmd} ]]; then
-    echo "Need to specify command."
+    echo "Need to specify command (build or shell)."
     exit
 fi
 if [[ -z ${name} ]]; then
-    echo "Need to specify name of docker project."
+    echo "Need to specify name of docker project ($(ls -dm */))."
     exit
 fi
 if [[ -z ${tag} ]]; then

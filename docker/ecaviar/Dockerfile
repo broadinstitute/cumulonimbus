@@ -1,4 +1,4 @@
-# Ubuntu with tabix, plink, python3 and ecaviar
+# Ubuntu with tabix, plink, python3, chowser and ecaviar
 
 FROM ubuntu:18.04
 
@@ -24,3 +24,7 @@ RUN cd caviar/CAVIAR-C++ && make && chmod +x eCAVIAR
 
 # link to eCAVIAR
 RUN ln -s /work/caviar/CAVIAR-C++/eCAVIAR /usr/local/bin/eCAVIAR
+
+COPY  chowser_1.0.0_all.deb chowser.deb
+
+RUN apt -y install ./chowser.deb

@@ -7,7 +7,7 @@ tag=$2
 #    exit
 #fi
 if [[ -z ${name} ]]; then
-    echo "Need to specify name of docker project."
+    echo "Need to specify name of docker project ($(ls -dm */))."
     exit
 fi
 if [[ -z ${tag} ]]; then

@@ -38,7 +38,7 @@ task select_region {
     String out_file_name
   }
   runtime {
-    docker: "us.gcr.io/broad-gdr-dig-storage/tabix-plink:2019-03-01"
+    docker: "gcr.io/broad-gdr-dig-storage/cumulonimbus-ecaviar:190403"
     cpu: 1
     memory: "5 GB"
     disks: "local-disk 20 HDD"
@@ -57,7 +57,7 @@ task calculate_correlations {
     String out_file_base_name
   }
   runtime {
-    docker: "us.gcr.io/broad-gdr-dig-storage/tabix-plink:2019-03-01"
+    docker: "gcr.io/broad-gdr-dig-storage/cumulonimbus-ecaviar:190403"
     cpu: 1
     memory: "5 GB"
     disks: "local-disk 20 HDD"
