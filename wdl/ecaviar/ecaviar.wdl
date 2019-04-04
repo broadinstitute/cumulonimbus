@@ -16,9 +16,23 @@ struct VariantsSummary {
 workflow ecaviar {
   input {
     SamplesFiles phenotypeSamples
-    VariantsSummary phenotypeVariantsSummary
+    VariantsSummary phenotype_variants_summary
     Float pValueLimit
 
   }
 
+  call get_phenotype_significant_variants {
+    input:
+      variants_summary = phenotype_variants_summary
+  }
+}
+
+task get_phenotype_significant_variants {
+  input {
+    VariantsSummary variants_summary
+    String out_file_name
+  }
+  command <<<
+    chowser tsv filter
+  >>>
 }
