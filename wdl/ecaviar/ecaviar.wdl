@@ -1,8 +1,8 @@
 version 1.0
 
 struct SamplesFiles {
-  File VcfGz
-  File Tbi
+  File vcf_bgz
+  File vcf_bgz_tbi
 }
 
 struct VariantsSummary {
