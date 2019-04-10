@@ -19,7 +19,6 @@ workflow ecaviar {
     VariantsSummary phenotype_variants_summary
     Float p_value_limit
     Int region_padding
-
   }
 
   String significant_variants_file_name = "significant_variants"
@@ -68,7 +67,7 @@ task get_phenotype_significant_variants {
     String out_file_name
   }
   runtime {
-    docker: "gcr.io/broad-gdr-dig-storage/cumulonimbus-ecaviar:190403"
+    docker: "gcr.io/broad-gdr-dig-storage/cumulonimbus-ecaviar:190410"
     cpu: 1
     memory: "5 GB"
     disks: "local-disk 20 HDD"
@@ -90,7 +89,7 @@ task get_regions_around_significance {
     String out_file_name
   }
   runtime {
-    docker: "gcr.io/broad-gdr-dig-storage/cumulonimbus-ecaviar:190403"
+    docker: "gcr.io/broad-gdr-dig-storage/cumulonimbus-ecaviar:190410"
     cpu: 1
     memory: "5 GB"
     disks: "local-disk 20 HDD"
@@ -112,7 +111,7 @@ task region_test {
     String out_file_name
   }
   runtime {
-    docker: "gcr.io/broad-gdr-dig-storage/cumulonimbus-ecaviar:190403"
+    docker: "gcr.io/broad-gdr-dig-storage/cumulonimbus-ecaviar:190410"
     cpu: 1
     memory: "5 GB"
     disks: "local-disk 20 HDD"
