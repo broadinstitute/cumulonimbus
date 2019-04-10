@@ -106,8 +106,8 @@ task get_regions_around_significance {
     disks: "local-disk 20 HDD"
   }
   command <<<
-    chowser variants regions --in ~{in_file} --out ~{out_file_name} --chrom ~{chromosome_col} \
-     --pos ~{position_col} --radius ~{radius}
+    chowser variants regions --in ~{in_file} --out ~{out_file_name} --chrom-col ~{chromosome_col} \
+     --pos-col ~{position_col} --radius ~{radius}
   >>>
   output {
     File out_file = out_file_name
