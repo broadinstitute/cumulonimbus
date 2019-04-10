@@ -49,12 +49,23 @@ workflow ecaviar {
     String chromosome = region[phenotype_variants_summary.chromosome_col]
     Int start = region[regionStartCol]
     Int end = region[regionEndCol]
-    call region_test {
+    call clip_region_from_samples {
       input:
+        samples_files = phenotype_samples,
         chromosome = chromosome,
         start = start,
         end = end,
-        out_file_name = "region"
+        out_file_name = "samples_" + chromosome + ":" + start + "-" + end + ".vcf"
+    }
+    call clip_region_from_summary {
+      input:
+        in_file = get_phenotype_significant_variants.out_file,
+        chromosome_col = phenotype_variants_summary.chromosome_col,
+        position_col = phenotype_variants_summary.position_col,
+        chromosome = chromosome,
+        start = start,
+        end = end,
+        out_file_name = "summary_" + chromosome + ":" + start + "-" + end + ".tsv"
     }
   }
 }
@@ -103,8 +114,9 @@ task get_regions_around_significance {
   }
 }
 
-task region_test {
+task clip_region_from_samples {
   input {
+    SamplesFiles samples_files
     String chromosome
     Int start
     Int end
@@ -117,9 +129,35 @@ task region_test {
     disks: "local-disk 20 HDD"
   }
   command <<<
-    echo "Chromosome: ~{chromosome}, start: ~{start}, end: ~{end}" > ~{out_file_name}
+    tabix -h ~{samples_files.vcf_bgz} ~{chromosome}:~{start}-~{end-1} >~{out_file_name}
   >>>
   output {
     File out_file = out_file_name
   }
+}
+
+task clip_region_from_summary {
+  input {
+    File in_file
+    String chromosome_col
+    String position_col
+    String out_file_name
+    String chromosome
+    Int start
+    Int end
+  }
+  runtime {
+    docker: "gcr.io/broad-gdr-dig-storage/cumulonimbus-ecaviar:190410"
+    cpu: 1
+    memory: "5 GB"
+    disks: "local-disk 20 HDD"
+  }
+  command <<<
+    chowser variants for-region --in ~{in_file} --out ~{out_file_name} \
+      --chrom-col ~{chromosome_col} --pos-col ~{position_col} --chrom ~{chromosome} --start ~{start} --end ~{end}
+  >>>
+  output {
+    File out_file = out_file_name
+  }
+
 }
