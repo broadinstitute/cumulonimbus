@@ -8,6 +8,7 @@ RUN apt update && apt -y install tabix
 
 RUN apt update && apt -y install wget unzip
 
+# install PLINK v1.90b6.7 64-bit (2 Dec 2018)
 RUN wget http://s3.amazonaws.com/plink1-assets/plink_linux_x86_64_20181202.zip && \
 	unzip plink_linux_x86_64_20181202.zip && \
 	chmod +x plink && \
@@ -25,6 +26,6 @@ RUN cd caviar/CAVIAR-C++ && make && chmod +x eCAVIAR
 # link to eCAVIAR
 RUN ln -s /work/caviar/CAVIAR-C++/eCAVIAR /usr/local/bin/eCAVIAR
 
-# install chowser
-RUN wget https://personal.broadinstitute.org/oliverr/software/chowser/chowser_1.1.0_all.deb && \
-    apt -y install ./chowser_1.1.0_all.deb
+# install chowser 1.2.0
+RUN wget https://personal.broadinstitute.org/oliverr/software/chowser/chowser_1.2.0_all.deb && \
+    apt -y install ./chowser_1.2.0_all.deb

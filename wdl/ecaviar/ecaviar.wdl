@@ -67,6 +67,12 @@ workflow ecaviar {
         end = end,
         out_file_name = "summary_" + chromosome + ":" + start + "-" + end + ".tsv"
     }
+    call sort_file_by_col {
+      input:
+        in_file = clip_region_from_summary.out_file,
+        col = phenotype_variants_summary.position_col,
+        out_file_name = "summary_sorted_" + chromosome + ":" + start + "-" + end + ".tsv"
+    }
   }
 }
 
@@ -78,7 +84,7 @@ task get_phenotype_significant_variants {
     String out_file_name
   }
   runtime {
-    docker: "gcr.io/broad-gdr-dig-storage/cumulonimbus-ecaviar:190410"
+    docker: "gcr.io/broad-gdr-dig-storage/cumulonimbus-ecaviar:190412"
     cpu: 1
     memory: "5 GB"
     disks: "local-disk 20 HDD"
@@ -100,7 +106,7 @@ task get_regions_around_significance {
     String out_file_name
   }
   runtime {
-    docker: "gcr.io/broad-gdr-dig-storage/cumulonimbus-ecaviar:190410"
+    docker: "gcr.io/broad-gdr-dig-storage/cumulonimbus-ecaviar:190412"
     cpu: 1
     memory: "5 GB"
     disks: "local-disk 20 HDD"
@@ -123,7 +129,7 @@ task clip_region_from_samples {
     String out_file_name
   }
   runtime {
-    docker: "gcr.io/broad-gdr-dig-storage/cumulonimbus-ecaviar:190410"
+    docker: "gcr.io/broad-gdr-dig-storage/cumulonimbus-ecaviar:190412"
     cpu: 1
     memory: "5 GB"
     disks: "local-disk 20 HDD"
@@ -147,7 +153,7 @@ task clip_region_from_summary {
     Int end
   }
   runtime {
-    docker: "gcr.io/broad-gdr-dig-storage/cumulonimbus-ecaviar:190410"
+    docker: "gcr.io/broad-gdr-dig-storage/cumulonimbus-ecaviar:190412"
     cpu: 1
     memory: "5 GB"
     disks: "local-disk 20 HDD"
@@ -159,5 +165,24 @@ task clip_region_from_summary {
   output {
     File out_file = out_file_name
   }
+}
 
+task sort_file_by_col {
+  input {
+    File in_file
+    String col
+    String out_file_name
+  }
+  runtime {
+    docker: "gcr.io/broad-gdr-dig-storage/cumulonimbus-ecaviar:190412"
+    cpu: 1
+    memory: "5 GB"
+    disks: "local-disk 20 HDD"
+  }
+  command <<<
+    chowser tsv sort --in ~{in_file} --out ~{out_file_name} --col ~{col}
+  >>>
+  output {
+    File out_file = out_file_name
+  }
 }
