@@ -78,8 +78,6 @@ workflow ecaviar {
         in_vcf = clip_region_from_samples.out_file,
         in_tsv = clip_region_from_summary.out_file,
         id_col = phenotype_variants_summary.variant_id_col,
-        chrom_col = phenotype_variants_summary.chromosome_col,
-        pos_col = phenotype_variants_summary.position_col,
         out_both_name = "variants_common_" + chromosome + ":" + start + "-" + end + ".tsv",
         out_vcf_only_name = "variants_samples_only_" + chromosome + ":" + start + "-" + end + ".tsv",
         out_tsv_only_name = "variants_summary_only_" + chromosome + ":" + start + "-" + end + ".tsv"
@@ -95,7 +93,7 @@ task get_phenotype_significant_variants {
     String out_file_name
   }
   runtime {
-    docker: "gcr.io/broad-gdr-dig-storage/cumulonimbus-ecaviar:190422"
+    docker: "gcr.io/broad-gdr-dig-storage/cumulonimbus-ecaviar:190424"
     cpu: 1
     memory: "5 GB"
     disks: "local-disk 20 HDD"
@@ -117,7 +115,7 @@ task get_regions_around_significance {
     String out_file_name
   }
   runtime {
-    docker: "gcr.io/broad-gdr-dig-storage/cumulonimbus-ecaviar:190422"
+    docker: "gcr.io/broad-gdr-dig-storage/cumulonimbus-ecaviar:190424"
     cpu: 1
     memory: "5 GB"
     disks: "local-disk 20 HDD"
@@ -140,7 +138,7 @@ task clip_region_from_samples {
     String out_file_name
   }
   runtime {
-    docker: "gcr.io/broad-gdr-dig-storage/cumulonimbus-ecaviar:190422"
+    docker: "gcr.io/broad-gdr-dig-storage/cumulonimbus-ecaviar:190424"
     cpu: 1
     memory: "5 GB"
     disks: "local-disk 20 HDD"
@@ -164,7 +162,7 @@ task clip_region_from_summary {
     Int end
   }
   runtime {
-    docker: "gcr.io/broad-gdr-dig-storage/cumulonimbus-ecaviar:190422"
+    docker: "gcr.io/broad-gdr-dig-storage/cumulonimbus-ecaviar:190424"
     cpu: 1
     memory: "5 GB"
     disks: "local-disk 20 HDD"
@@ -185,7 +183,7 @@ task sort_file_by_col {
     String out_file_name
   }
   runtime {
-    docker: "gcr.io/broad-gdr-dig-storage/cumulonimbus-ecaviar:190422"
+    docker: "gcr.io/broad-gdr-dig-storage/cumulonimbus-ecaviar:190424"
     cpu: 1
     memory: "5 GB"
     disks: "local-disk 20 HDD"
@@ -203,22 +201,19 @@ task compare_variants {
     File in_vcf
     File in_tsv
     String id_col
-    String chrom_col
-    String pos_col
     String out_both_name
     String out_vcf_only_name
     String out_tsv_only_name
   }
   runtime {
-    docker: "gcr.io/broad-gdr-dig-storage/cumulonimbus-ecaviar:190422"
+    docker: "gcr.io/broad-gdr-dig-storage/cumulonimbus-ecaviar:190424"
     cpu: 1
     memory: "5 GB"
     disks: "local-disk 20 HDD"
   }
   command <<<
-    chowser compare variants \
-      --vcf ~{in_vcf} --tsv ~{in_tsv} \
-      --id-col ~{id_col} --chrom-col ~{chrom_col} --pos-col ~{pos_col} \
+    chowser match variants \
+      --vcf ~{in_vcf} --tsv ~{in_tsv} --id-col ~{id_col}  \
       --in-both ~{out_both_name} --vcf-only ~{out_vcf_only_name} --tsv-only ~{out_tsv_only_name}
   >>>
   output {
