@@ -13,12 +13,17 @@ struct VariantsSummary {
   String position_col
 }
 
+struct Tissue {
+  File variants
+}
+
 workflow ecaviar {
   input {
     SamplesFiles phenotype_samples
     VariantsSummary phenotype_variants_summary
     Float p_value_limit
     Int region_padding
+    Array[Tissue] tissues
   }
 
   String significant_variants_file_name = "significant_variants"
@@ -49,7 +54,7 @@ workflow ecaviar {
     String chromosome = region[phenotype_variants_summary.chromosome_col]
     Int start = region[regionStartCol]
     Int end = region[regionEndCol]
-    call clip_region_from_samples {
+    call clip_region_from_samples as clip_region_from_phenotype_samples {
       input:
         samples_files = phenotype_samples,
         chromosome = chromosome,
@@ -57,7 +62,7 @@ workflow ecaviar {
         end = end,
         out_file_name = "samples_" + chromosome + ":" + start + "-" + end + ".vcf"
     }
-    call clip_region_from_summary {
+    call clip_region_from_summary as clip_region_from_phenotype_summary {
       input:
         in_file = get_phenotype_significant_variants.out_file,
         chromosome_col = phenotype_variants_summary.chromosome_col,
@@ -69,18 +74,24 @@ workflow ecaviar {
     }
     call sort_file_by_col {
       input:
-        in_file = clip_region_from_summary.out_file,
+        in_file = clip_region_from_phenotype_summary.out_file,
         col = phenotype_variants_summary.position_col,
         out_file_name = "summary_sorted_" + chromosome + ":" + start + "-" + end + ".tsv"
     }
-    call compare_variants {
+    call match_variants {
       input:
-        in_vcf = clip_region_from_samples.out_file,
-        in_tsv = clip_region_from_summary.out_file,
+        in_vcf = clip_region_from_phenotype_samples.out_file,
+        in_tsv = clip_region_from_phenotype_summary.out_file,
         id_col = phenotype_variants_summary.variant_id_col,
         out_both_name = "variants_common_" + chromosome + ":" + start + "-" + end + ".tsv",
         out_vcf_only_name = "variants_samples_only_" + chromosome + ":" + start + "-" + end + ".tsv",
         out_tsv_only_name = "variants_summary_only_" + chromosome + ":" + start + "-" + end + ".tsv"
+    }
+    scatter(tissue in tissues) {
+      call clip_region_from_summary as clip_region_from_expression_summary {
+        input:
+          in_file = tissue.variants
+      }
     }
   }
 }
@@ -196,7 +207,7 @@ task sort_file_by_col {
   }
 }
 
-task compare_variants {
+task match_variants {
   input {
     File in_vcf
     File in_tsv
