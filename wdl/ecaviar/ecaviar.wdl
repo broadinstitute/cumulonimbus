@@ -13,7 +13,13 @@ struct VariantsSummary {
   String position_col
 }
 
+struct ExpressionData {
+  String variant_id_col
+  Array[Tissue] tissues
+}
+
 struct Tissue {
+  String tissue_name
   File variants
 }
 
@@ -23,6 +29,7 @@ workflow ecaviar {
     VariantsSummary phenotype_variants_summary
     Float p_value_limit
     Int region_padding
+    ExpressionData expression_data
     Array[Tissue] tissues
   }
 
@@ -65,8 +72,7 @@ workflow ecaviar {
     call clip_region_from_summary as clip_region_from_phenotype_summary {
       input:
         in_file = get_phenotype_significant_variants.out_file,
-        chromosome_col = phenotype_variants_summary.chromosome_col,
-        position_col = phenotype_variants_summary.position_col,
+        id_col = phenotype_variants_summary.variant_id_col,
         chromosome = chromosome,
         start = start,
         end = end,
@@ -90,7 +96,12 @@ workflow ecaviar {
     scatter(tissue in tissues) {
       call clip_region_from_summary as clip_region_from_expression_summary {
         input:
-          in_file = tissue.variants
+          in_file = tissue.variants,
+          id_col = expression_data.variant_id_col,
+          chromosome = chromosome,
+          start = start,
+          end = end,
+          out_file_name = "summary_" + tissue.tissue_name + "_" + chromosome + ":" + start + "-" + end + ".tsv"
       }
     }
   }
@@ -165,8 +176,7 @@ task clip_region_from_samples {
 task clip_region_from_summary {
   input {
     File in_file
-    String chromosome_col
-    String position_col
+    String id_col
     String out_file_name
     String chromosome
     Int start
@@ -180,7 +190,7 @@ task clip_region_from_summary {
   }
   command <<<
     chowser variants for-region --in ~{in_file} --out ~{out_file_name} \
-      --chrom-col ~{chromosome_col} --pos-col ~{position_col} --chrom ~{chromosome} --start ~{start} --end ~{end}
+      --id-col ~{id_col} --chrom ~{chromosome} --start ~{start} --end ~{end}
   >>>
   output {
     File out_file = out_file_name
