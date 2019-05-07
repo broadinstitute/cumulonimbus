@@ -11,6 +11,8 @@ struct VariantsSummary {
   String p_value_col
   String chromosome_col
   String position_col
+  String ref_col
+  String alt_col
 }
 
 struct ExpressionData {
@@ -31,6 +33,14 @@ workflow ecaviar {
     Int region_padding
     ExpressionData expression_data
     Array[Tissue] tissues
+  }
+
+  String canonicalized_samples_file = "samples_canon.vcf.bgz"
+
+  call canonicalize_samples as canonicalize_phenotype_samples {
+    input:
+      in_files = phenotype_samples,
+      out_files_name = canonicalized_samples_file
   }
 
   String significant_variants_file_name = "significant_variants"
@@ -63,7 +73,7 @@ workflow ecaviar {
     Int end = region[regionEndCol]
     call clip_region_from_samples as clip_region_from_phenotype_samples {
       input:
-        samples_files = phenotype_samples,
+        samples_files = canonicalize_phenotype_samples.out_files,
         chromosome = chromosome,
         start = start,
         end = end,
@@ -107,6 +117,50 @@ workflow ecaviar {
   }
 }
 
+task canonicalize_samples {
+  input {
+    SamplesFiles in_files
+    String out_files_name
+  }
+  runtime {
+    docker: "gcr.io/broad-gdr-dig-storage/cumulonimbus-ecaviar:190507"
+    cpu: 1
+    memory: "5 GB"
+    disks: "local-disk 20 HDD"
+  }
+  command <<<
+    chowser variants canonicalize-vcf --in ~{in_files.vcf_bgz} --out ~{out_files_name}
+  >>>
+  output {
+    SampleFiles out_files = { "vcf_bgz": out_files_name, "vcf_bgz_tbi": out_files_name + ".tbi" }
+  }
+}
+
+task canonicalize_summary {
+  input {
+    File in_file
+    String id_col
+    String chromosome_col
+    String position_col
+    String ref_col
+    String alt_col
+    String out_file_name
+  }
+  runtime {
+    docker: "gcr.io/broad-gdr-dig-storage/cumulonimbus-ecaviar:190507"
+    cpu: 1
+    memory: "5 GB"
+    disks: "local-disk 20 HDD"
+  }
+  command <<<
+    chowser variants canonicalize-tsv --in ~{in_file} --out ~{out_file_name} --id-col ~{id_col} \
+      --chrom-col ~{chromosome_col} --pos-col ~{position_col} --ref-col ~{ref_col} --alt-col ~{alt_col}
+  >>>
+  output {
+    File out_file = out_file_name
+  }
+}
+
 task get_phenotype_significant_variants {
   input {
     File in_file
@@ -115,7 +169,7 @@ task get_phenotype_significant_variants {
     String out_file_name
   }
   runtime {
-    docker: "gcr.io/broad-gdr-dig-storage/cumulonimbus-ecaviar:190424"
+    docker: "gcr.io/broad-gdr-dig-storage/cumulonimbus-ecaviar:190507"
     cpu: 1
     memory: "5 GB"
     disks: "local-disk 20 HDD"
@@ -137,7 +191,7 @@ task get_regions_around_significance {
     String out_file_name
   }
   runtime {
-    docker: "gcr.io/broad-gdr-dig-storage/cumulonimbus-ecaviar:190424"
+    docker: "gcr.io/broad-gdr-dig-storage/cumulonimbus-ecaviar:190507"
     cpu: 1
     memory: "5 GB"
     disks: "local-disk 20 HDD"
@@ -160,7 +214,7 @@ task clip_region_from_samples {
     String out_file_name
   }
   runtime {
-    docker: "gcr.io/broad-gdr-dig-storage/cumulonimbus-ecaviar:190424"
+    docker: "gcr.io/broad-gdr-dig-storage/cumulonimbus-ecaviar:190507"
     cpu: 1
     memory: "5 GB"
     disks: "local-disk 20 HDD"
@@ -183,7 +237,7 @@ task clip_region_from_summary {
     Int end
   }
   runtime {
-    docker: "gcr.io/broad-gdr-dig-storage/cumulonimbus-ecaviar:190424"
+    docker: "gcr.io/broad-gdr-dig-storage/cumulonimbus-ecaviar:190507"
     cpu: 1
     memory: "5 GB"
     disks: "local-disk 20 HDD"
@@ -204,7 +258,7 @@ task sort_file_by_col {
     String out_file_name
   }
   runtime {
-    docker: "gcr.io/broad-gdr-dig-storage/cumulonimbus-ecaviar:190424"
+    docker: "gcr.io/broad-gdr-dig-storage/cumulonimbus-ecaviar:190507"
     cpu: 1
     memory: "5 GB"
     disks: "local-disk 20 HDD"
@@ -227,7 +281,7 @@ task match_variants {
     String out_tsv_only_name
   }
   runtime {
-    docker: "gcr.io/broad-gdr-dig-storage/cumulonimbus-ecaviar:190424"
+    docker: "gcr.io/broad-gdr-dig-storage/cumulonimbus-ecaviar:190507"
     cpu: 1
     memory: "5 GB"
     disks: "local-disk 20 HDD"
