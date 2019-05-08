@@ -22,6 +22,7 @@ struct ExpressionData {
 
 struct Tissue {
   String tissue_name
+  String gene_id_col
   VariantsSummary summary
 }
 
@@ -111,16 +112,16 @@ workflow ecaviar {
         end = end,
         out_file_name = "summary_" + chromosome + ":" + start + "-" + end
     }
-    call sort_file_by_col {
+    call sort_file_by_col as sort_phenotype_summary {
       input:
         in_file = clip_region_from_phenotype_summary.out_file,
         col = phenotype_variants_summary.position_col,
-        out_file_name = "summary_sorted_" + chromosome + ":" + start + "-" + end
+        out_file_name = "phenotype_summary_sorted_" + chromosome + ":" + start + "-" + end
     }
     call match_variants as match_variants_phenotype_samples_summary {
       input:
         in_vcf = clip_region_from_phenotype_samples.out_file,
-        in_tsv = clip_region_from_phenotype_summary.out_file,
+        in_tsv = sort_phenotype_summary.out_file,
         id_col = phenotype_variants_summary.variant_id_col,
         out_both_name = "phenotype_common_" + chromosome + ":" + start + "-" + end,
         out_vcf_only_name = "phenotype_samples_only_" + chromosome + ":" + start + "-" + end,
@@ -138,12 +139,18 @@ workflow ecaviar {
     scatter(tissue in expression_data.tissues) {
       call clip_region_from_summary as clip_region_from_expression_summary {
         input:
-          in_file = tissue.variants,
-          id_col = expression_data.variant_id_col,
+          in_file = tissue.summary.file,
+          id_col = tissue.summary.variant_id_col,
           chromosome = chromosome,
           start = start,
           end = end,
           out_file_name = "summary_" + tissue.tissue_name + "_" + chromosome + ":" + start + "-" + end
+      }
+      call extract_unique {
+        input:
+          in_file = clip_region_from_expression_summary.out_file,
+          col = tissue.gene_id_col,
+          out_file_name = "genes_" + tissue.tissue_name + "_" + chromosome + ":" + start + "-" + end
       }
     }
   }
@@ -331,5 +338,25 @@ task match_variants {
     File out_both = out_both_name
     File out_vcf_only = out_vcf_only_name
     File out_tsv_only = out_tsv_only_name
+  }
+}
+
+task extract_unique {
+  input {
+    File in_file
+    String col
+    String out_file_name
+  }
+  runtime {
+    docker: "gcr.io/broad-gdr-dig-storage/cumulonimbus-ecaviar:190507"
+    cpu: 1
+    memory: "5 GB"
+    disks: "local-disk 20 HDD"
+  }
+  command <<<
+    chowser tsv extract-unique --in ~{in_file} --out ~{out_file_name} --col ~{col}
+  >>>
+  output {
+    File out_file = out_file_name
   }
 }
