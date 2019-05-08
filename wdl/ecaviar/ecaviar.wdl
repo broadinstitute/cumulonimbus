@@ -16,13 +16,13 @@ struct VariantsSummary {
 }
 
 struct ExpressionData {
-  String variant_id_col
+  SamplesFiles samples_files
   Array[Tissue] tissues
 }
 
 struct Tissue {
   String tissue_name
-  File variants
+  VariantsSummary summary
 }
 
 workflow ecaviar {
@@ -32,22 +32,37 @@ workflow ecaviar {
     Float p_value_limit
     Int region_padding
     ExpressionData expression_data
-    Array[Tissue] tissues
   }
 
-  String canonicalized_samples_file = "samples_canon.vcf.bgz"
+  String canonicalized_phenotype_samples_file_name = "samples_phenotype_canon.vcf.bgz"
 
   call canonicalize_samples as canonicalize_phenotype_samples {
     input:
       in_files = phenotype_samples,
-      out_files_name = canonicalized_samples_file
+      out_files_name = canonicalized_phenotype_samples_file_name
+  }
+
+  String canonicalized_expression_samples_file_name = "samples_expression_canon.vcf.bgz"
+
+  call canonicalize_samples as canonicalize_expression_samples {
+    input:
+      in_files = expression_data.samples_files,
+      out_files_name = canonicalized_expression_samples_file_name
+  }
+
+  String phenotype_summary_canonicalized_name = "phenotype_summary_canon"
+
+  call canonicalize_summary as canonicalize_phenotype_summary {
+    input:
+      summary = phenotype_variants_summary,
+      out_file_name = phenotype_summary_canonicalized_name
   }
 
   String significant_variants_file_name = "significant_variants"
 
   call get_phenotype_significant_variants {
     input:
-      in_file = phenotype_variants_summary.file,
+      in_file = canonicalize_phenotype_summary.summary_canonical.file,
       p_value_col = phenotype_variants_summary.p_value_col,
       p_value_limit = p_value_limit,
       out_file_name = significant_variants_file_name
@@ -77,7 +92,15 @@ workflow ecaviar {
         chromosome = chromosome,
         start = start,
         end = end,
-        out_file_name = "samples_" + chromosome + ":" + start + "-" + end + ".vcf"
+        out_file_name = "samples_phenotype_" + chromosome + ":" + start + "-" + end + ".vcf"
+    }
+    call clip_region_from_samples as clip_region_from_expression_samples {
+      input:
+        samples_files = canonicalize_expression_samples.out_files,
+        chromosome = chromosome,
+        start = start,
+        end = end,
+        out_file_name = "samples_expression_" + chromosome + ":" + start + "-" + end + ".vcf"
     }
     call clip_region_from_summary as clip_region_from_phenotype_summary {
       input:
@@ -86,24 +109,33 @@ workflow ecaviar {
         chromosome = chromosome,
         start = start,
         end = end,
-        out_file_name = "summary_" + chromosome + ":" + start + "-" + end + ".tsv"
+        out_file_name = "summary_" + chromosome + ":" + start + "-" + end
     }
     call sort_file_by_col {
       input:
         in_file = clip_region_from_phenotype_summary.out_file,
         col = phenotype_variants_summary.position_col,
-        out_file_name = "summary_sorted_" + chromosome + ":" + start + "-" + end + ".tsv"
+        out_file_name = "summary_sorted_" + chromosome + ":" + start + "-" + end
     }
-    call match_variants {
+    call match_variants as match_variants_phenotype_samples_summary {
       input:
         in_vcf = clip_region_from_phenotype_samples.out_file,
         in_tsv = clip_region_from_phenotype_summary.out_file,
         id_col = phenotype_variants_summary.variant_id_col,
-        out_both_name = "variants_common_" + chromosome + ":" + start + "-" + end + ".tsv",
-        out_vcf_only_name = "variants_samples_only_" + chromosome + ":" + start + "-" + end + ".tsv",
-        out_tsv_only_name = "variants_summary_only_" + chromosome + ":" + start + "-" + end + ".tsv"
+        out_both_name = "phenotype_common_" + chromosome + ":" + start + "-" + end,
+        out_vcf_only_name = "phenotype_samples_only_" + chromosome + ":" + start + "-" + end,
+        out_tsv_only_name = "phenotype_summary_only_" + chromosome + ":" + start + "-" + end
     }
-    scatter(tissue in tissues) {
+    call match_variants as match_variants_phenotype_expression_samples {
+      input:
+        in_vcf = clip_region_from_expression_samples.out_file,
+        in_tsv = match_variants_phenotype_samples_summary.out_both,
+        id_col = phenotype_variants_summary.variant_id_col,
+        out_both_name = "phenotype_expression_samples_" + chromosome + ":" + start + "-" + end,
+        out_vcf_only_name = "expression_samples_only_" + chromosome + ":" + start + "-" + end,
+        out_tsv_only_name = "phenotype_only_" + chromosome + ":" + start + "-" + end
+    }
+    scatter(tissue in expression_data.tissues) {
       call clip_region_from_summary as clip_region_from_expression_summary {
         input:
           in_file = tissue.variants,
@@ -111,7 +143,7 @@ workflow ecaviar {
           chromosome = chromosome,
           start = start,
           end = end,
-          out_file_name = "summary_" + tissue.tissue_name + "_" + chromosome + ":" + start + "-" + end + ".tsv"
+          out_file_name = "summary_" + tissue.tissue_name + "_" + chromosome + ":" + start + "-" + end
       }
     }
   }
@@ -138,12 +170,7 @@ task canonicalize_samples {
 
 task canonicalize_summary {
   input {
-    File in_file
-    String id_col
-    String chromosome_col
-    String position_col
-    String ref_col
-    String alt_col
+    VariantsSummary summary
     String out_file_name
   }
   runtime {
@@ -153,11 +180,20 @@ task canonicalize_summary {
     disks: "local-disk 20 HDD"
   }
   command <<<
-    chowser variants canonicalize-tsv --in ~{in_file} --out ~{out_file_name} --id-col ~{id_col} \
-      --chrom-col ~{chromosome_col} --pos-col ~{position_col} --ref-col ~{ref_col} --alt-col ~{alt_col}
+    chowser variants canonicalize-tsv --in ~{summary.file} --out ~{out_file_name} --id-col ~{summary.id_col} \
+      --chrom-col ~{summary.chromosome_col} --pos-col ~{summary.position_col} --ref-col ~{summary.ref_col} \
+      --alt-col ~{summary.alt_col}
   >>>
   output {
-    File out_file = out_file_name
+    VariantsSummary summary_canonical = {
+        "file" : out_file_name,
+        "variant_id_col" : summary.variant_id_col,
+        "p_value_col" : summary.p_value_col,
+        "chromosome_col" : summary.chromosome_col,
+        "position_col" : summary.position_col,
+        "ref_col" : summary.ref_col,
+        "alt_col" : summary.alt_col
+    }
   }
 }
 
