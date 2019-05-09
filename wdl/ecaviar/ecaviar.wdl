@@ -146,11 +146,15 @@ workflow ecaviar {
           end = end,
           out_file_name = "summary_" + tissue.tissue_name + "_" + chromosome + ":" + start + "-" + end
       }
-      call extract_unique {
+      call extract_unique as extract_genes {
         input:
           in_file = clip_region_from_expression_summary.out_file,
           col = tissue.gene_id_col,
           out_file_name = "genes_" + tissue.tissue_name + "_" + chromosome + ":" + start + "-" + end
+      }
+      scatter(gene_entry in read_objects(extract_genes.out_file)) {
+        String gene = gene_entry[tissue.gene_id_col]
+
       }
     }
   }
