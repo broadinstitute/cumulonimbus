@@ -153,8 +153,21 @@ workflow ecaviar {
           out_file_name = "genes_" + tissue.tissue_name + "_" + chromosome + ":" + start + "-" + end
       }
       scatter(gene_entry in read_objects(extract_genes.out_file)) {
-        String gene = gene_entry[tissue.gene_id_col]
-
+        String gene_id = gene_entry[tissue.gene_id_col]
+        String cohort_name = gene_id + "_" + tissue.tissue_name + "_" + chromosome + ":" + start + "-" + end
+        call slice_by_value as slice_by_gene_id {
+          input:
+            in_file = clip_region_from_expression_summary.out_file,
+            col = tissue.gene_id_col,
+            value = gene_id,
+            out_file_name = "summary_" + cohort_name
+        }
+        call sort_file_by_col as sort_cohort_by_position {
+          input:
+            in_file = slice_by_gene_id.out_file,
+            col = tissue.summary.position_col,
+            out_file_name = "summary_sorted_" + cohort_name
+        }
       }
     }
   }
@@ -222,7 +235,7 @@ task get_phenotype_significant_variants {
     disks: "local-disk 20 HDD"
   }
   command <<<
-    chowser tsv filter --in ~{in_file} --out ~{out_file_name} --col ~{p_value_col} --lt ~{p_value_limit}
+    chowser tsv range --in ~{in_file} --out ~{out_file_name} --col ~{p_value_col} --lt ~{p_value_limit}
   >>>
   output {
     File out_file = out_file_name
@@ -363,4 +376,26 @@ task extract_unique {
   output {
     File out_file = out_file_name
   }
+}
+
+task slice_by_value {
+  input {
+    File in_file
+    String col
+    String value
+    String out_file_name
+  }
+  runtime {
+    docker: "gcr.io/broad-gdr-dig-storage/cumulonimbus-ecaviar:190507"
+    cpu: 1
+    memory: "5 GB"
+    disks: "local-disk 20 HDD"
+  }
+  command <<<
+    chowser tsv slice --in ~{in_file} --out ~{out_file_name} --col ~{col} --value ~{value}
+  >>>
+  output {
+    File out_file = out_file_name
+  }
+
 }
