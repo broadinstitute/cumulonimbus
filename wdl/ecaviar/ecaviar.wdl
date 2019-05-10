@@ -178,6 +178,36 @@ workflow ecaviar {
             out_tsv1_only_name = "variants_not_in_expression_summary_" + cohort_name,
             out_tsv2_only_name = "variants_only_in_expression_summary_" + cohort_name,
         }
+        call select_variants_tsv as select_variants_phenotype_summary {
+          input:
+            data_file = sort_phenotype_summary.out_file,
+            selection_file = match_variants_with_expression_summary.out_both,
+            col_in_data = phenotype_variants_summary.variant_id_col,
+            col_in_selection = tissue.summary.variant_id_col,
+            out_file_name = "phenotype_summary_selected_variants_" + cohort_name
+        }
+        call select_variants_tsv as select_variants_expression_summary {
+          input:
+            data_file = sort_cohort_by_position.out_file,
+            selection_file = match_variants_with_expression_summary.out_both,
+            col_in_data = tissue.summary.variant_id_col,
+            col_in_selection = tissue.summary.variant_id_col,
+            out_file_name = "expression_summary_selected_variants_" + cohort_name
+        }
+        call select_variants_vcf as select_variants_phenotype_samples {
+          input:
+            data_file = clip_region_from_phenotype_samples.out_file,
+            selection_file = match_variants_with_expression_summary.out_both,
+            col_in_selection = tissue.summary.variant_id_col,
+            out_file_name = "phenotype_samples_selected_variants_" + cohort_name + ".vcf"
+        }
+        call select_variants_vcf as select_variants_expression_samples {
+          input:
+            data_file = clip_region_from_expression_samples.out_file,
+            selection_file = match_variants_with_expression_summary.out_both,
+            col_in_selection = tissue.summary.variant_id_col,
+            out_file_name = "expression_samples_selected_variants_" + cohort_name + ".vcf"
+        }
       }
     }
   }
@@ -435,5 +465,52 @@ task slice_by_value {
   output {
     File out_file = out_file_name
   }
-
 }
+
+task select_variants_tsv {
+  input {
+    File data_file
+    File selection_file
+    String col_in_data
+    String col_in_selection
+    String out_file_name
+  }
+  runtime {
+    docker: "gcr.io/broad-gdr-dig-storage/cumulonimbus-ecaviar:190507"
+    cpu: 1
+    memory: "5 GB"
+    disks: "local-disk 20 HDD"
+  }
+  command <<<
+    chowser variants select-tsv --data ~{data_file} --selection ~{selection_file} --out ~{out_file_name} \
+    --id-col-data ~{col_in_data} --id-col-selection ~{col_in_selection}
+  >>>
+  output {
+    File out_file = out_file_name
+  }
+}
+
+task select_variants_vcf {
+  input {
+    File data_file
+    File selection_file
+    String col_in_selection
+    String out_file_name
+  }
+  runtime {
+    docker: "gcr.io/broad-gdr-dig-storage/cumulonimbus-ecaviar:190507"
+    cpu: 1
+    memory: "5 GB"
+    disks: "local-disk 20 HDD"
+  }
+  command <<<
+    bgzip ~{data_file}
+    chowser variants select-vcf --data ~{data_file + ".bgz"} --selection ~{selection_file} --out ~{out_file_name} \
+      --id-col-selection ~{col_in_selection}
+    gunzip ~{out_file_name + ".bgz"}
+  >>>
+  output {
+    File out_file = out_file_name
+  }
+}
+
