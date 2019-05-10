@@ -118,7 +118,7 @@ workflow ecaviar {
         col = phenotype_variants_summary.position_col,
         out_file_name = "phenotype_summary_sorted_" + chromosome + ":" + start + "-" + end
     }
-    call match_variants as match_variants_phenotype_samples_summary {
+    call match_variants_vcf_tsv as match_variants_phenotype_samples_summary {
       input:
         in_vcf = clip_region_from_phenotype_samples.out_file,
         in_tsv = sort_phenotype_summary.out_file,
@@ -127,7 +127,7 @@ workflow ecaviar {
         out_vcf_only_name = "phenotype_samples_only_" + chromosome + ":" + start + "-" + end,
         out_tsv_only_name = "phenotype_summary_only_" + chromosome + ":" + start + "-" + end
     }
-    call match_variants as match_variants_phenotype_expression_samples {
+    call match_variants_vcf_tsv as match_variants_phenotype_expression_samples {
       input:
         in_vcf = clip_region_from_expression_samples.out_file,
         in_tsv = match_variants_phenotype_samples_summary.out_both,
@@ -167,6 +167,16 @@ workflow ecaviar {
             in_file = slice_by_gene_id.out_file,
             col = tissue.summary.position_col,
             out_file_name = "summary_sorted_" + cohort_name
+        }
+        call match_variants_tsv_tsv as match_variants_with_expression_summary {
+          input:
+            in_tsv1 = match_variants_phenotype_expression_samples.out_both,
+            in_tsv2 = sort_cohort_by_position,
+            id_col1 = tissue.summary.variant_id_col,
+            id_col2 = tissue.summary.variant_id_col,
+            out_both_name = "variants_" + cohort_name,
+            out_tsv1_only_name = "variants_not_in_expression_summary_" + cohort_name,
+            out_tsv2_only_name = "variants_only_in_expression_summary_" + cohort_name,
         }
       }
     }
@@ -331,7 +341,7 @@ task sort_file_by_col {
   }
 }
 
-task match_variants {
+task match_variants_vcf_tsv {
   input {
     File in_vcf
     File in_tsv
@@ -347,7 +357,7 @@ task match_variants {
     disks: "local-disk 20 HDD"
   }
   command <<<
-    chowser match variants \
+    chowser variants match-vcf-tsv \
       --vcf ~{in_vcf} --tsv ~{in_tsv} --id-col ~{id_col}  \
       --in-both ~{out_both_name} --vcf-only ~{out_vcf_only_name} --tsv-only ~{out_tsv_only_name}
   >>>
@@ -355,6 +365,34 @@ task match_variants {
     File out_both = out_both_name
     File out_vcf_only = out_vcf_only_name
     File out_tsv_only = out_tsv_only_name
+  }
+}
+
+task match_variants_tsv_tsv {
+  input {
+    File in_tsv1
+    File in_tsv2
+    String id_col1
+    String id_col2
+    String out_both_name
+    String out_tsv1_only_name
+    String out_tsv2_only_name
+  }
+  runtime {
+    docker: "gcr.io/broad-gdr-dig-storage/cumulonimbus-ecaviar:190507"
+    cpu: 1
+    memory: "5 GB"
+    disks: "local-disk 20 HDD"
+  }
+  command <<<
+    chowser variants match-tsv-tsv \
+      --tsv1 ~{in_tsv1} --tsv2 ~{in_tsv2} --id-col1 ~{id_col1} --id-col2 ~{id_col2}  \
+      --in-both ~{out_both_name} --tsv1-only ~{out_tsv1_only_name} --tsv2-only ~{out_tsv2_only_name}
+  >>>
+  output {
+    File out_both = out_both_name
+    File out_tsv1_only = out_tsv1_only_name
+    File out_tsv2_only = out_tsv2_only_name
   }
 }
 
