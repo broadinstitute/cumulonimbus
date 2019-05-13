@@ -208,6 +208,16 @@ workflow ecaviar {
             col_in_selection = tissue.summary.variant_id_col,
             out_file_name = "expression_samples_selected_variants_" + cohort_name + ".vcf"
         }
+        call calculate_correlations as calculate_phenotype_correlations {
+          input:
+            in_file = select_variants_phenotype_samples,
+            out_file_base_name = "phenotype_correlations_" + cohort_name
+        }
+        call calculate_correlations as calculate_expression_correlations {
+          input:
+            in_file = select_variants_expression_samples,
+            out_file_base_name = "expression_correlations_" + cohort_name
+        }
       }
     }
   }
@@ -511,6 +521,25 @@ task select_variants_vcf {
   >>>
   output {
     File out_file = out_file_name
+  }
+}
+
+task calculate_correlations {
+  input {
+    File in_file
+    String out_file_base_name
+  }
+  runtime {
+    docker: "gcr.io/broad-gdr-dig-storage/cumulonimbus-ecaviar:190507"
+    cpu: 1
+    memory: "5 GB"
+    disks: "local-disk 20 HDD"
+  }
+  command <<<
+    plink --vcf ~{in_file} --a1-allele ~{in_file} 4 3 '#' --r --out ~{out_file_base_name}
+  >>>
+  output {
+    File out_file = out_file_base_name + ".ld"
   }
 }
 
