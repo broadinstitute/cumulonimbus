@@ -26,6 +26,6 @@ RUN cd caviar/CAVIAR-C++ && make && chmod +x eCAVIAR
 # link to eCAVIAR
 RUN ln -s /work/caviar/CAVIAR-C++/eCAVIAR /usr/local/bin/eCAVIAR
 
-# install chowser 1.5.0
-RUN wget https://personal.broadinstitute.org/oliverr/software/chowser/chowser_1.5.0_all.deb && \
-    apt -y install ./chowser_1.5.0_all.deb
+# install chowser 1.6.0
+RUN wget https://personal.broadinstitute.org/oliverr/software/chowser/chowser_1.6.0_all.deb && \
+    apt -y install ./chowser_1.6.0_all.deb
