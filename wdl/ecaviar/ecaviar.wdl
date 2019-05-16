@@ -211,12 +211,34 @@ workflow ecaviar {
         call calculate_correlations as calculate_phenotype_correlations {
           input:
             in_file = select_variants_phenotype_samples,
-            out_file_base_name = "phenotype_correlations_" + cohort_name
+            out_file_name = "phenotype_correlations_" + cohort_name
         }
         call calculate_correlations as calculate_expression_correlations {
           input:
             in_file = select_variants_expression_samples,
-            out_file_base_name = "expression_correlations_" + cohort_name
+            out_file_name = "expression_correlations_" + cohort_name
+        }
+        call generate_z_scores_for_ecaviar as generate_z_scores_phenotype {
+          input:
+            in_file = select_variants_phenotype_summary.out_file,
+            id_col = phenotype_variants_summary.variant_id_col,
+            p_col = phenotype_variants_summary.p_value_col,
+            out_file_name = "z_scores_phenotype_" + cohort_name
+        }
+        call generate_z_scores_for_ecaviar as generate_z_scores_expression {
+          input:
+            in_file = select_variants_phenotype_summary.out_file,
+            id_col = tissue.summary.variant_id_col,
+            p_col = tissue.summary.p_value_col,
+            out_file_name = "z_scores_phenotype_" + cohort_name
+        }
+        call ecaviar {
+          input:
+            ld_file1 = calculate_phenotype_correlations.out_file,
+            z_file1 = generate_z_scores_phenotype.out_file,
+            ld_file2 = calculate_expression_correlations.out_file,
+            z_file2 = generate_z_scores_expression.out_file,
+            out_file_name = "ecaviar_" + cohort_name
         }
       }
     }
@@ -527,7 +549,7 @@ task select_variants_vcf {
 task calculate_correlations {
   input {
     File in_file
-    String out_file_base_name
+    String out_file_name
   }
   runtime {
     docker: "gcr.io/broad-gdr-dig-storage/cumulonimbus-ecaviar:190516"
@@ -536,11 +558,12 @@ task calculate_correlations {
     disks: "local-disk 20 HDD"
   }
   command <<<
-    plink --vcf ~{in_file} --a1-allele ~{in_file} 4 3 '#' --r --out ~{out_file_base_name}
-    ???
+    plink --vcf ~{in_file} --a1-allele ~{in_file} 4 3 '#' --r --out plink
+    chowser caviar matrix --ids-file ~{in_file} --values-file plink.ld \
+      --value-col R --id-col1 SNP_A --id-col2 SNP_B --out ~{out_file_name}
   >>>
   output {
-    File out_file = out_file_base_name + ".ld"
+    File out_file = out_file_name
   }
 }
 
@@ -567,10 +590,10 @@ task generate_z_scores_for_ecaviar {
 
 task ecaviar {
   input {
-    File ldFile1
-    File zFile1
-    File ldFile2
-    File zFile2
+    File ld_file1
+    File z_file1
+    File ld_file2
+    File z_file2
     String out_file_name
   }
   runtime {
@@ -580,7 +603,7 @@ task ecaviar {
     disks: "local-disk 20 HDD"
   }
   command <<<
-    eCAVIAR -l ~{ldFile1} -z ~{zFile1} -l ~{ldFile2} -z ~{zFile2} -o ~{out_file_name}
+    eCAVIAR -l ~{ld_file1} -z ~{z_file1} -l ~{ld_file2} -z ~{z_file2} -o ~{out_file_name}
   >>>
   output {
     File out_file = out_file_name
