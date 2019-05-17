@@ -15,15 +15,15 @@ struct VariantsSummary {
   String alt_col
 }
 
-struct ExpressionData {
-  SamplesFiles samples_files
-  Array[Tissue] tissues
-}
-
 struct Tissue {
   String tissue_name
   String gene_id_col
   VariantsSummary summary
+}
+
+struct ExpressionData {
+  SamplesFiles samples_files
+  Array[Tissue] tissues
 }
 
 workflow ecaviar {
@@ -171,7 +171,7 @@ workflow ecaviar {
         call match_variants_tsv_tsv as match_variants_with_expression_summary {
           input:
             in_tsv1 = match_variants_phenotype_expression_samples.out_both,
-            in_tsv2 = sort_cohort_by_position,
+            in_tsv2 = sort_cohort_by_position.out_file,
             id_col1 = tissue.summary.variant_id_col,
             id_col2 = tissue.summary.variant_id_col,
             out_both_name = "variants_" + cohort_name,
@@ -210,12 +210,12 @@ workflow ecaviar {
         }
         call calculate_correlations as calculate_phenotype_correlations {
           input:
-            in_file = select_variants_phenotype_samples,
+            in_file = select_variants_phenotype_samples.out_file,
             out_file_base_name = "phenotype_correlations_" + cohort_name
         }
         call calculate_correlations as calculate_expression_correlations {
           input:
-            in_file = select_variants_expression_samples,
+            in_file = select_variants_expression_samples.out_file,
             out_file_base_name = "expression_correlations_" + cohort_name
         }
       }
@@ -238,7 +238,7 @@ task canonicalize_samples {
     chowser variants canonicalize-vcf --in ~{in_files.vcf_bgz} --out ~{out_files_name}
   >>>
   output {
-    SampleFiles out_files = { "vcf_bgz": out_files_name, "vcf_bgz_tbi": out_files_name + ".tbi" }
+    SamplesFiles out_files = { "vcf_bgz": out_files_name, "vcf_bgz_tbi": out_files_name + ".tbi" }
   }
 }
 
@@ -254,7 +254,7 @@ task canonicalize_summary {
     disks: "local-disk 20 HDD"
   }
   command <<<
-    chowser variants canonicalize-tsv --in ~{summary.file} --out ~{out_file_name} --id-col ~{summary.id_col} \
+    chowser variants canonicalize-tsv --in ~{summary.file} --out ~{out_file_name} --id-col ~{summary.variant_id_col} \
       --chrom-col ~{summary.chromosome_col} --pos-col ~{summary.position_col} --ref-col ~{summary.ref_col} \
       --alt-col ~{summary.alt_col}
   >>>
