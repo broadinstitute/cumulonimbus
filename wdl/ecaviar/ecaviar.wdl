@@ -210,14 +210,12 @@ workflow ecaviar {
         }
         call calculate_correlations as calculate_phenotype_correlations {
           input:
-            in_file = select_variants_phenotype_samples,
-            out_file_name = "phenotype_correlations_" + cohort_name
             in_file = select_variants_phenotype_samples.out_file,
-            out_file_base_name = "phenotype_correlations_" + cohort_name
+            out_file_name = "phenotype_correlations_" + cohort_name
         }
         call calculate_correlations as calculate_expression_correlations {
           input:
-            in_file = select_variants_expression_samples,
+            in_file = select_variants_expression_samples.out_file,
             out_file_name = "expression_correlations_" + cohort_name
         }
         call generate_z_scores_for_ecaviar as generate_z_scores_phenotype {
@@ -241,8 +239,6 @@ workflow ecaviar {
             ld_file2 = calculate_expression_correlations.out_file,
             z_file2 = generate_z_scores_expression.out_file,
             out_file_name = "ecaviar_" + cohort_name
-            in_file = select_variants_expression_samples.out_file,
-            out_file_base_name = "expression_correlations_" + cohort_name
         }
       }
     }
