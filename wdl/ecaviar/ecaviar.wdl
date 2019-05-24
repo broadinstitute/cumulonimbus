@@ -106,7 +106,6 @@ workflow ecaviar {
     call clip_region_from_summary as clip_region_from_phenotype_summary {
       input:
         in_file = get_phenotype_significant_variants.out_file,
-        id_col = phenotype_variants_summary.variant_id_col,
         chromosome = chromosome,
         start = start,
         end = end,
@@ -140,7 +139,6 @@ workflow ecaviar {
       call clip_region_from_summary as clip_region_from_expression_summary {
         input:
           in_file = tissue.summary.file,
-          id_col = tissue.summary.variant_id_col,
           chromosome = chromosome,
           start = start,
           end = end,
@@ -368,7 +366,6 @@ task clip_region_from_samples {
 task clip_region_from_summary {
   input {
     File in_file
-    String id_col
     String out_file_name
     String chromosome
     Int start
@@ -382,7 +379,7 @@ task clip_region_from_summary {
   }
   command <<<
     chowser variants for-region --in ~{in_file} --out ~{out_file_name} \
-      --id-col ~{id_col} --chrom ~{chromosome} --start ~{start} --end ~{end}
+      --chrom ~{chromosome} --start ~{start} --end ~{end}
   >>>
   output {
     File out_file = out_file_name
