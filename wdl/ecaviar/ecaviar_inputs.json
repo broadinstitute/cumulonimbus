@@ -1,6 +1,6 @@
 {
-  "ecaviar.p_value_limit": "0.01",
-  "ecaviar.region_padding": "100000",
+  "ecaviar.p_value_limit": "5e-8",
+  "ecaviar.region_padding": "150000",
   "ecaviar.phenotype_samples": {
     "vcf_bgz": "gs://oliver-cromwell/data/ecaviar/toy/ryan/simgwas/COPDGene.chr16bp2811322-3061322.vcf.bgz",
     "vcf_bgz_tbi": "gs://oliver-cromwell/data/ecaviar/toy/ryan/simgwas/COPDGene.chr16bp2811322-3061322.vcf.bgz.tbi"
