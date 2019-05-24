@@ -546,10 +546,8 @@ task select_variants_vcf {
     disks: "local-disk 20 HDD"
   }
   command <<<
-    bgzip ~{data_file}
-    chowser variants select-vcf --data ~{data_file + ".bgz"} --selection ~{selection_file} --out ~{out_file_name} \
+    chowser variants select-vcf --data ~{data_file} --selection ~{selection_file} --out ~{out_file_name} \
       --id-col-selection ~{col_in_selection}
-    gunzip ~{out_file_name + ".bgz"}
   >>>
   output {
     File out_file = out_file_name
