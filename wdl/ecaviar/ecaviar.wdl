@@ -259,8 +259,8 @@ task canonicalize_samples {
   command <<<
     gunzip -c ~{in_files.vcf_bgz} >variants_temp.vcf
     chowser variants canonicalize-vcf --in variants_temp.vcf --out ~{out_files_base_name}.vcf
-    bgzip -c ~{out_files_base_name}.vcf > ~{out_files_base_name}.vcf.gz
-    tabix -p vcf ~{out_files_base_name}.vcf.gz
+    bgzip -c ~{out_files_base_name}.vcf > ~{out_files_base_name}.vcf.bgz
+    tabix -p vcf ~{out_files_base_name}.vcf.bgz
   >>>
   output {
     SamplesFiles out_files = {
