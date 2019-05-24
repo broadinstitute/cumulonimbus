@@ -80,13 +80,13 @@ workflow ecaviar {
       out_file_name = regions_file_name
   }
 
-  String regionStartCol = "start"
-  String regionEndCol = "end"
+  String region_start_col = "start"
+  String region_end_col = "end"
 
   scatter(region in read_objects(get_regions_around_significance.out_file)) {
     String chromosome = region[phenotype_variants_summary.chromosome_col]
-    Int start = region[regionStartCol]
-    Int end = region[regionEndCol]
+    Int start = region[region_start_col]
+    Int end = region[region_end_col]
     call clip_region_from_samples as clip_region_from_phenotype_samples {
       input:
         samples_files = canonicalize_phenotype_samples.out_files,
@@ -106,6 +106,8 @@ workflow ecaviar {
     call clip_region_from_summary as clip_region_from_phenotype_summary {
       input:
         in_file = get_phenotype_significant_variants.out_file,
+        chromosome_col = phenotype_variants_summary.chromosome_col,
+        position_col = phenotype_variants_summary.position_col,
         chromosome = chromosome,
         start = start,
         end = end,
@@ -139,6 +141,8 @@ workflow ecaviar {
       call clip_region_from_summary as clip_region_from_expression_summary {
         input:
           in_file = tissue.summary.file,
+          chromosome_col = tissue.summary.chromosome_col,
+          position_col = tissue.summary.position_col,
           chromosome = chromosome,
           start = start,
           end = end,
@@ -367,6 +371,8 @@ task clip_region_from_summary {
   input {
     File in_file
     String out_file_name
+    String chromosome_col
+    String position_col
     String chromosome
     Int start
     Int end
@@ -379,6 +385,7 @@ task clip_region_from_summary {
   }
   command <<<
     chowser variants for-region --in ~{in_file} --out ~{out_file_name} \
+      --chrom-col ~{chromosome_col} --pos-col ~{position_col} \
       --chrom ~{chromosome} --start ~{start} --end ~{end}
   >>>
   output {
