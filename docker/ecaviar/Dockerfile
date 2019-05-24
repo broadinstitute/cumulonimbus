@@ -37,8 +37,8 @@ RUN apt -y update && \
     apt-get update && \
     apt-get install sbt
 
-# install latest Chowser
+# install Chowser 1.6.2
 RUN git clone https://github.com/broadinstitute/chowser.git && \
     cd chowser && \
     sbt debian:lintian && \
-    apt -y install ./target/chowser_*_all.deb
+    apt -y install ./target/chowser_1.6.2_all.deb
