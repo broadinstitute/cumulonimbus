@@ -26,6 +26,19 @@ RUN cd caviar/CAVIAR-C++ && make && chmod +x eCAVIAR
 # link to eCAVIAR
 RUN ln -s /work/caviar/CAVIAR-C++/eCAVIAR /usr/local/bin/eCAVIAR
 
-# install chowser 1.6.0
-RUN wget https://personal.broadinstitute.org/oliverr/software/chowser/chowser_1.6.0_all.deb && \
-    apt -y install ./chowser_1.6.0_all.deb
+# install JVM
+RUN apt update && apt -y install openjdk-11-jdk-headless
+
+# install SBT and lintian
+RUN apt -y update && \
+    apt -y install gnupg2 fakeroot lintian && \
+    echo "deb https://dl.bintray.com/sbt/debian /" | tee -a /etc/apt/sources.list.d/sbt.list && \
+    apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv 2EE0EA64E40A89B84B2DF73499E82A75642AC823 && \
+    apt-get update && \
+    apt-get install sbt
+
+# install latest Chowser
+RUN git clone https://github.com/broadinstitute/chowser.git && \
+    cd chowser && \
+    sbt debian:lintian && \
+    apt -y install ./target/chowser_*_all.deb

@@ -35,20 +35,20 @@ workflow ecaviar {
     ExpressionData expression_data
   }
 
-  String canonicalized_phenotype_samples_file_name = "samples_phenotype_canon.vcf.bgz"
+  String canonicalized_phenotype_samples_file_base_name = "samples_phenotype_canon"
 
   call canonicalize_samples as canonicalize_phenotype_samples {
     input:
       in_files = phenotype_samples,
-      out_files_name = canonicalized_phenotype_samples_file_name
+      out_files_base_name = canonicalized_phenotype_samples_file_base_name
   }
 
-  String canonicalized_expression_samples_file_name = "samples_expression_canon.vcf.bgz"
+  String canonicalized_expression_samples_file_base_name = "samples_expression_canon"
 
   call canonicalize_samples as canonicalize_expression_samples {
     input:
       in_files = expression_data.samples_files,
-      out_files_name = canonicalized_expression_samples_file_name
+      out_files_base_name = canonicalized_expression_samples_file_base_name
   }
 
   String phenotype_summary_canonicalized_name = "phenotype_summary_canon"
@@ -248,19 +248,25 @@ workflow ecaviar {
 task canonicalize_samples {
   input {
     SamplesFiles in_files
-    String out_files_name
+    String out_files_base_name
   }
   runtime {
-    docker: "gcr.io/broad-gdr-dig-storage/cumulonimbus-ecaviar:190516"
+    docker: "gcr.io/broad-gdr-dig-storage/cumulonimbus-ecaviar:190524"
     cpu: 1
     memory: "5 GB"
     disks: "local-disk 20 HDD"
   }
   command <<<
-    chowser variants canonicalize-vcf --in ~{in_files.vcf_bgz} --out ~{out_files_name}
+    gunzip -c ~{in_files.vcf_bgz} >variants_temp.vcf
+    chowser variants canonicalize-vcf --in variants_temp.vcf --out ~{out_files_base_name}.vcf
+    bgzip -c ~{out_files_base_name}.vcf > ~{out_files_base_name}.vcf.gz
+    tabix -p vcf ~{out_files_base_name}.vcf.gz
   >>>
   output {
-    SamplesFiles out_files = { "vcf_bgz": out_files_name, "vcf_bgz_tbi": out_files_name + ".tbi" }
+    SamplesFiles out_files = {
+      "vcf_bgz": out_files_base_name + ".vcf.bgz",
+      "vcf_bgz_tbi": out_files_base_name + ".vaf.bgz.tbi"
+    }
   }
 }
 
@@ -270,7 +276,7 @@ task canonicalize_summary {
     String out_file_name
   }
   runtime {
-    docker: "gcr.io/broad-gdr-dig-storage/cumulonimbus-ecaviar:190516"
+    docker: "gcr.io/broad-gdr-dig-storage/cumulonimbus-ecaviar:190524"
     cpu: 1
     memory: "5 GB"
     disks: "local-disk 20 HDD"
@@ -301,7 +307,7 @@ task get_phenotype_significant_variants {
     String out_file_name
   }
   runtime {
-    docker: "gcr.io/broad-gdr-dig-storage/cumulonimbus-ecaviar:190516"
+    docker: "gcr.io/broad-gdr-dig-storage/cumulonimbus-ecaviar:190524"
     cpu: 1
     memory: "5 GB"
     disks: "local-disk 20 HDD"
@@ -323,7 +329,7 @@ task get_regions_around_significance {
     String out_file_name
   }
   runtime {
-    docker: "gcr.io/broad-gdr-dig-storage/cumulonimbus-ecaviar:190516"
+    docker: "gcr.io/broad-gdr-dig-storage/cumulonimbus-ecaviar:190524"
     cpu: 1
     memory: "5 GB"
     disks: "local-disk 20 HDD"
@@ -346,7 +352,7 @@ task clip_region_from_samples {
     String out_file_name
   }
   runtime {
-    docker: "gcr.io/broad-gdr-dig-storage/cumulonimbus-ecaviar:190516"
+    docker: "gcr.io/broad-gdr-dig-storage/cumulonimbus-ecaviar:190524"
     cpu: 1
     memory: "5 GB"
     disks: "local-disk 20 HDD"
@@ -369,7 +375,7 @@ task clip_region_from_summary {
     Int end
   }
   runtime {
-    docker: "gcr.io/broad-gdr-dig-storage/cumulonimbus-ecaviar:190516"
+    docker: "gcr.io/broad-gdr-dig-storage/cumulonimbus-ecaviar:190524"
     cpu: 1
     memory: "5 GB"
     disks: "local-disk 20 HDD"
@@ -390,7 +396,7 @@ task sort_file_by_col {
     String out_file_name
   }
   runtime {
-    docker: "gcr.io/broad-gdr-dig-storage/cumulonimbus-ecaviar:190516"
+    docker: "gcr.io/broad-gdr-dig-storage/cumulonimbus-ecaviar:190524"
     cpu: 1
     memory: "5 GB"
     disks: "local-disk 20 HDD"
@@ -413,7 +419,7 @@ task match_variants_vcf_tsv {
     String out_tsv_only_name
   }
   runtime {
-    docker: "gcr.io/broad-gdr-dig-storage/cumulonimbus-ecaviar:190516"
+    docker: "gcr.io/broad-gdr-dig-storage/cumulonimbus-ecaviar:190524"
     cpu: 1
     memory: "5 GB"
     disks: "local-disk 20 HDD"
@@ -441,7 +447,7 @@ task match_variants_tsv_tsv {
     String out_tsv2_only_name
   }
   runtime {
-    docker: "gcr.io/broad-gdr-dig-storage/cumulonimbus-ecaviar:190516"
+    docker: "gcr.io/broad-gdr-dig-storage/cumulonimbus-ecaviar:190524"
     cpu: 1
     memory: "5 GB"
     disks: "local-disk 20 HDD"
@@ -465,7 +471,7 @@ task extract_unique {
     String out_file_name
   }
   runtime {
-    docker: "gcr.io/broad-gdr-dig-storage/cumulonimbus-ecaviar:190516"
+    docker: "gcr.io/broad-gdr-dig-storage/cumulonimbus-ecaviar:190524"
     cpu: 1
     memory: "5 GB"
     disks: "local-disk 20 HDD"
@@ -486,7 +492,7 @@ task slice_by_value {
     String out_file_name
   }
   runtime {
-    docker: "gcr.io/broad-gdr-dig-storage/cumulonimbus-ecaviar:190516"
+    docker: "gcr.io/broad-gdr-dig-storage/cumulonimbus-ecaviar:190524"
     cpu: 1
     memory: "5 GB"
     disks: "local-disk 20 HDD"
@@ -508,7 +514,7 @@ task select_variants_tsv {
     String out_file_name
   }
   runtime {
-    docker: "gcr.io/broad-gdr-dig-storage/cumulonimbus-ecaviar:190516"
+    docker: "gcr.io/broad-gdr-dig-storage/cumulonimbus-ecaviar:190524"
     cpu: 1
     memory: "5 GB"
     disks: "local-disk 20 HDD"
@@ -530,7 +536,7 @@ task select_variants_vcf {
     String out_file_name
   }
   runtime {
-    docker: "gcr.io/broad-gdr-dig-storage/cumulonimbus-ecaviar:190516"
+    docker: "gcr.io/broad-gdr-dig-storage/cumulonimbus-ecaviar:190524"
     cpu: 1
     memory: "5 GB"
     disks: "local-disk 20 HDD"
@@ -552,7 +558,7 @@ task calculate_correlations {
     String out_file_name
   }
   runtime {
-    docker: "gcr.io/broad-gdr-dig-storage/cumulonimbus-ecaviar:190516"
+    docker: "gcr.io/broad-gdr-dig-storage/cumulonimbus-ecaviar:190524"
     cpu: 1
     memory: "5 GB"
     disks: "local-disk 20 HDD"
@@ -575,7 +581,7 @@ task generate_z_scores_for_ecaviar {
     String out_file_name
   }
   runtime {
-    docker: "gcr.io/broad-gdr-dig-storage/cumulonimbus-ecaviar:190516"
+    docker: "gcr.io/broad-gdr-dig-storage/cumulonimbus-ecaviar:190524"
     cpu: 1
     memory: "5 GB"
     disks: "local-disk 20 HDD"
@@ -597,7 +603,7 @@ task ecaviar {
     String out_file_name
   }
   runtime {
-    docker: "gcr.io/broad-gdr-dig-storage/cumulonimbus-ecaviar:190516"
+    docker: "gcr.io/broad-gdr-dig-storage/cumulonimbus-ecaviar:190524"
     cpu: 1
     memory: "5 GB"
     disks: "local-disk 20 HDD"
