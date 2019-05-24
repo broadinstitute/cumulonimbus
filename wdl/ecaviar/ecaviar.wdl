@@ -265,7 +265,7 @@ task canonicalize_samples {
   output {
     SamplesFiles out_files = {
       "vcf_bgz": out_files_base_name + ".vcf.bgz",
-      "vcf_bgz_tbi": out_files_base_name + ".vaf.bgz.tbi"
+      "vcf_bgz_tbi": out_files_base_name + ".vcf.bgz.tbi"
     }
   }
 }
