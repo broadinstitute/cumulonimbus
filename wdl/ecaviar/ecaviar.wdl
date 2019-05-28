@@ -172,10 +172,10 @@ workflow ecaviar {
         }
         call match_variants_tsv_tsv as match_variants_with_expression_summary {
           input:
-            in_tsv1 = match_variants_phenotype_expression_samples.out_both,
-            in_tsv2 = sort_cohort_by_position.out_file,
+            in_tsv1 = sort_cohort_by_position.out_file,
+            in_tsv2 = match_variants_phenotype_expression_samples.out_both,
             id_col1 = tissue.summary.variant_id_col,
-            id_col2 = tissue.summary.variant_id_col,
+            id_col2 = phenotype_variants_summary.variant_id_col,
             out_both_name = "variants_" + cohort_name,
             out_tsv1_only_name = "variants_not_in_expression_summary_" + cohort_name,
             out_tsv2_only_name = "variants_only_in_expression_summary_" + cohort_name,
