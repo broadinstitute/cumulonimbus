@@ -566,7 +566,7 @@ task calculate_correlations {
     disks: "local-disk 20 HDD"
   }
   command <<<
-    plink --vcf ~{in_file} --a1-allele ~{in_file} 4 3 '#' --r --out plink
+    plink --vcf ~{in_file} --a1-allele ~{in_file} 4 3 '#' --r --out plink.ld
     chowser caviar matrix --ids-file ~{in_file} --values-file plink.ld \
       --value-col R --id-col1 SNP_A --id-col2 SNP_B --out ~{out_file_name}
   >>>
