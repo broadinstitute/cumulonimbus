@@ -1,0 +1,65 @@
+{
+  "ecaviar.p_value_limit": "5e-8",
+  "ecaviar.region_padding": "150000",
+  "ecaviar.phenotype_samples": {
+    "vcf_bgz": "gs://oliver-cromwell/data/ecaviar/first/1kg/shapeit2_mvncall_integrated_v4.20130502.chr16.vcf.bgz",
+    "vcf_bgz_tbi": "gs://oliver-cromwell/data/ecaviar/first/1kg/shapeit2_mvncall_integrated_v4.20130502.chr16.vcf.bgz.tbi"
+  },
+  "ecaviar.phenotype_variants_summary": {
+    "file": "gs://oliver-cromwell/data/ecaviar/first/portal/T2D.initial.sumstats",
+    "p_value_col": "P",
+    "variant_id_col": "SNP",
+    "chromosome_col": "CHR",
+    "position_col": "POS",
+    "ref_col": "A2",
+    "alt_col": "A1"
+  },
+  "ecaviar.expression_data": {
+    "samples_files": {
+      "vcf_bgz": "gs://oliver-cromwell/data/ecaviar/gtex/GTEx_Analysis_2016-01-15_v7_WholeGenomeSeq_635Ind_PASS_AB02_GQ20_HETX_MISS15_PLINKQC.chr16.hg38.vcf.gz",
+      "vcf_bgz_tbi": "gs://oliver-cromwell/data/ecaviar/gtex/GTEx_Analysis_2016-01-15_v7_WholeGenomeSeq_635Ind_PASS_AB02_GQ20_HETX_MISS15_PLINKQC.chr16.hg38.vcf.gz.tbi"
+    },
+    "tissues": [
+      {
+        "tissue_name": "Adipose_Visceral_Omentum",
+        "gene_id_col": "gene_id",
+        "summary": {
+          "file": "gs://oliver-cromwell/data/ecaviar/first/eqtl/tissues/Adipose_Visceral_Omentum.eqtl",
+          "p_value_col": "pval_nominal",
+          "variant_id_col": "variant_id",
+          "chromosome_col": "chr",
+          "position_col": "pos",
+          "ref_col": "ref",
+          "alt_col": "alt"
+        }
+      },
+      {
+        "tissue_name": "Pancreas",
+        "gene_id_col": "gene_id",
+        "summary": {
+          "file": "gs://oliver-cromwell/data/ecaviar/first/eqtl/tissues/Pancreas.eqtl",
+          "p_value_col": "pval_nominal",
+          "variant_id_col": "variant_id",
+          "chromosome_col": "chr",
+          "position_col": "pos",
+          "ref_col": "ref",
+          "alt_col": "alt"
+        }
+      },
+      {
+        "tissue_name": "Stomach",
+        "gene_id_col": "gene_id",
+        "summary": {
+          "file": "gs://oliver-cromwell/data/ecaviar/first/eqtl/tissues/Stomach.eqtl",
+          "p_value_col": "pval_nominal",
+          "variant_id_col": "variant_id",
+          "chromosome_col": "chr",
+          "position_col": "pos",
+          "ref_col": "ref",
+          "alt_col": "alt"
+        }
+      }
+    ]
+  }
+}
+
