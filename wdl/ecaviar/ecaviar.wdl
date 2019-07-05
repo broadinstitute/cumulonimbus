@@ -87,13 +87,14 @@ workflow ecaviar {
     String chromosome = region[phenotype_variants_summary.chromosome_col]
     Int start = region[region_start_col]
     Int end = region[region_end_col]
+    String region_notation = chromosome + ":" + start + "-" + end
     call clip_region_from_samples as clip_region_from_phenotype_samples {
       input:
         samples_files = canonicalize_phenotype_samples.out_files,
         chromosome = chromosome,
         start = start,
         end = end,
-        out_file_name = "samples_phenotype_" + chromosome + ":" + start + "-" + end + ".vcf"
+        out_file_name = "samples_phenotype_" + region_notation + ".vcf"
     }
     call clip_region_from_samples as clip_region_from_expression_samples {
       input:
@@ -101,7 +102,7 @@ workflow ecaviar {
         chromosome = chromosome,
         start = start,
         end = end,
-        out_file_name = "samples_expression_" + chromosome + ":" + start + "-" + end + ".vcf"
+        out_file_name = "samples_expression_" + region_notation + ".vcf"
     }
     call clip_region_from_summary as clip_region_from_phenotype_summary {
       input:
@@ -111,31 +112,31 @@ workflow ecaviar {
         chromosome = chromosome,
         start = start,
         end = end,
-        out_file_name = "summary_" + chromosome + ":" + start + "-" + end
+        out_file_name = "summary_" + region_notation
     }
     call sort_file_by_col as sort_phenotype_summary {
       input:
         in_file = clip_region_from_phenotype_summary.out_file,
         col = phenotype_variants_summary.position_col,
-        out_file_name = "phenotype_summary_sorted_" + chromosome + ":" + start + "-" + end
+        out_file_name = "phenotype_summary_sorted_" + region_notation
     }
     call match_variants_vcf_tsv as match_variants_phenotype_samples_summary {
       input:
         in_vcf = clip_region_from_phenotype_samples.out_file,
         in_tsv = sort_phenotype_summary.out_file,
         id_col = phenotype_variants_summary.variant_id_col,
-        out_both_name = "phenotype_common_" + chromosome + ":" + start + "-" + end,
-        out_vcf_only_name = "phenotype_samples_only_" + chromosome + ":" + start + "-" + end,
-        out_tsv_only_name = "phenotype_summary_only_" + chromosome + ":" + start + "-" + end
+        out_both_name = "phenotype_common_" + region_notation,
+        out_vcf_only_name = "phenotype_samples_only_" + region_notation,
+        out_tsv_only_name = "phenotype_summary_only_" + region_notation
     }
     call match_variants_vcf_tsv as match_variants_phenotype_expression_samples {
       input:
         in_vcf = clip_region_from_expression_samples.out_file,
         in_tsv = match_variants_phenotype_samples_summary.out_both,
         id_col = phenotype_variants_summary.variant_id_col,
-        out_both_name = "phenotype_expression_samples_" + chromosome + ":" + start + "-" + end,
-        out_vcf_only_name = "expression_samples_only_" + chromosome + ":" + start + "-" + end,
-        out_tsv_only_name = "phenotype_only_" + chromosome + ":" + start + "-" + end
+        out_both_name = "phenotype_expression_samples_" + region_notation,
+        out_vcf_only_name = "expression_samples_only_" + region_notation,
+        out_tsv_only_name = "phenotype_only_" + region_notation
     }
     scatter(tissue in expression_data.tissues) {
       call clip_region_from_summary as clip_region_from_expression_summary {
@@ -146,104 +147,123 @@ workflow ecaviar {
           chromosome = chromosome,
           start = start,
           end = end,
-          out_file_name = "summary_" + tissue.tissue_name + "_" + chromosome + ":" + start + "-" + end
+          out_file_name = "summary_" + tissue.tissue_name + "_" + region_notation
       }
-      call extract_unique as extract_genes {
-        input:
-          in_file = clip_region_from_expression_summary.out_file,
-          col = tissue.gene_id_col,
-          out_file_name = "genes_" + tissue.tissue_name + "_" + chromosome + ":" + start + "-" + end
-      }
-      scatter(gene_entry in read_objects(extract_genes.out_file)) {
-        String gene_id = gene_entry[tissue.gene_id_col]
-        String cohort_name = gene_id + "_" + tissue.tissue_name + "_" + chromosome + ":" + start + "-" + end
-        call slice_by_value as slice_by_gene_id {
+      Int n_expression_entries = length(read_lines(clip_region_from_expression_summary.out_file)) - 1
+      String report_by_region_tissue =
+        "Tissue " + tissue.tissue_name + " in region " + region_notation + " has " +
+        n_expression_entries + " expression entries."
+      if(n_expression_entries > 0) {
+        call extract_unique as extract_genes {
           input:
             in_file = clip_region_from_expression_summary.out_file,
             col = tissue.gene_id_col,
-            value = gene_id,
-            out_file_name = "summary_" + cohort_name
+            out_file_name = "genes_" + tissue.tissue_name + "_" + region_notation
         }
-        call sort_file_by_col as sort_cohort_by_position {
-          input:
-            in_file = slice_by_gene_id.out_file,
-            col = tissue.summary.position_col,
-            out_file_name = "summary_sorted_" + cohort_name
-        }
-        call match_variants_tsv_tsv as match_variants_with_expression_summary {
-          input:
-            in_tsv1 = sort_cohort_by_position.out_file,
-            in_tsv2 = match_variants_phenotype_expression_samples.out_both,
-            id_col1 = tissue.summary.variant_id_col,
-            id_col2 = phenotype_variants_summary.variant_id_col,
-            out_both_name = "variants_" + cohort_name,
-            out_tsv1_only_name = "variants_not_in_expression_summary_" + cohort_name,
-            out_tsv2_only_name = "variants_only_in_expression_summary_" + cohort_name,
-        }
-        call select_variants_tsv as select_variants_phenotype_summary {
-          input:
-            data_file = sort_phenotype_summary.out_file,
-            selection_file = match_variants_with_expression_summary.out_both,
-            col_in_data = phenotype_variants_summary.variant_id_col,
-            col_in_selection = tissue.summary.variant_id_col,
-            out_file_name = "phenotype_summary_selected_variants_" + cohort_name
-        }
-        call select_variants_tsv as select_variants_expression_summary {
-          input:
-            data_file = sort_cohort_by_position.out_file,
-            selection_file = match_variants_with_expression_summary.out_both,
-            col_in_data = tissue.summary.variant_id_col,
-            col_in_selection = tissue.summary.variant_id_col,
-            out_file_name = "expression_summary_selected_variants_" + cohort_name
-        }
-        call select_variants_vcf as select_variants_phenotype_samples {
-          input:
-            data_file = clip_region_from_phenotype_samples.out_file,
-            selection_file = match_variants_with_expression_summary.out_both,
-            col_in_selection = tissue.summary.variant_id_col,
-            out_file_name = "phenotype_samples_selected_variants_" + cohort_name + ".vcf"
-        }
-        call select_variants_vcf as select_variants_expression_samples {
-          input:
-            data_file = clip_region_from_expression_samples.out_file,
-            selection_file = match_variants_with_expression_summary.out_both,
-            col_in_selection = tissue.summary.variant_id_col,
-            out_file_name = "expression_samples_selected_variants_" + cohort_name + ".vcf"
-        }
-        call calculate_correlations as calculate_phenotype_correlations {
-          input:
-            in_file = select_variants_phenotype_samples.out_file,
-            out_file_name = "phenotype_correlations_" + cohort_name
-        }
-        call calculate_correlations as calculate_expression_correlations {
-          input:
-            in_file = select_variants_expression_samples.out_file,
-            out_file_name = "expression_correlations_" + cohort_name
-        }
-        call generate_z_scores_for_ecaviar as generate_z_scores_phenotype {
-          input:
-            in_file = select_variants_phenotype_summary.out_file,
-            id_col = phenotype_variants_summary.variant_id_col,
-            p_col = phenotype_variants_summary.p_value_col,
-            out_file_name = "z_scores_phenotype_" + cohort_name
-        }
-        call generate_z_scores_for_ecaviar as generate_z_scores_expression {
-          input:
-            in_file = select_variants_phenotype_summary.out_file,
-            id_col = tissue.summary.variant_id_col,
-            p_col = tissue.summary.p_value_col,
-            out_file_name = "z_scores_phenotype_" + cohort_name
-        }
-        call ecaviar {
-          input:
-            ld_file1 = calculate_phenotype_correlations.out_file,
-            z_file1 = generate_z_scores_phenotype.out_file,
-            ld_file2 = calculate_expression_correlations.out_file,
-            z_file2 = generate_z_scores_expression.out_file,
-            out_file_name = "ecaviar_" + cohort_name
+        scatter(gene_entry in read_objects(extract_genes.out_file)) {
+          String gene_id = gene_entry[tissue.gene_id_col]
+          String cohort_name = gene_id + "_" + tissue.tissue_name + "_" + region_notation
+          call slice_by_value as slice_by_gene_id {
+            input:
+              in_file = clip_region_from_expression_summary.out_file,
+              col = tissue.gene_id_col,
+              value = gene_id,
+              out_file_name = "summary_" + cohort_name
+          }
+          call sort_file_by_col as sort_cohort_by_position {
+            input:
+              in_file = slice_by_gene_id.out_file,
+              col = tissue.summary.position_col,
+              out_file_name = "summary_sorted_" + cohort_name
+          }
+          call match_variants_tsv_tsv as match_variants_with_expression_summary {
+            input:
+              in_tsv1 = sort_cohort_by_position.out_file,
+              in_tsv2 = match_variants_phenotype_expression_samples.out_both,
+              id_col1 = tissue.summary.variant_id_col,
+              id_col2 = phenotype_variants_summary.variant_id_col,
+              out_both_name = "variants_" + cohort_name,
+              out_tsv1_only_name = "variants_not_in_expression_summary_" + cohort_name,
+              out_tsv2_only_name = "variants_only_in_expression_summary_" + cohort_name,
+          }
+          call select_variants_tsv as select_variants_phenotype_summary {
+            input:
+              data_file = sort_phenotype_summary.out_file,
+              selection_file = match_variants_with_expression_summary.out_both,
+              col_in_data = phenotype_variants_summary.variant_id_col,
+              col_in_selection = tissue.summary.variant_id_col,
+              out_file_name = "phenotype_summary_selected_variants_" + cohort_name
+          }
+          call select_variants_tsv as select_variants_expression_summary {
+            input:
+              data_file = sort_cohort_by_position.out_file,
+              selection_file = match_variants_with_expression_summary.out_both,
+              col_in_data = tissue.summary.variant_id_col,
+              col_in_selection = tissue.summary.variant_id_col,
+              out_file_name = "expression_summary_selected_variants_" + cohort_name
+          }
+          call select_variants_vcf as select_variants_phenotype_samples {
+            input:
+              data_file = clip_region_from_phenotype_samples.out_file,
+              selection_file = match_variants_with_expression_summary.out_both,
+              col_in_selection = tissue.summary.variant_id_col,
+              out_file_name = "phenotype_samples_selected_variants_" + cohort_name + ".vcf"
+          }
+          call select_variants_vcf as select_variants_expression_samples {
+            input:
+              data_file = clip_region_from_expression_samples.out_file,
+              selection_file = match_variants_with_expression_summary.out_both,
+              col_in_selection = tissue.summary.variant_id_col,
+              out_file_name = "expression_samples_selected_variants_" + cohort_name + ".vcf"
+          }
+          call calculate_correlations as calculate_phenotype_correlations {
+            input:
+              in_file = select_variants_phenotype_samples.out_file,
+              out_file_name = "phenotype_correlations_" + cohort_name
+          }
+          call calculate_correlations as calculate_expression_correlations {
+            input:
+              in_file = select_variants_expression_samples.out_file,
+              out_file_name = "expression_correlations_" + cohort_name
+          }
+          call generate_z_scores_for_ecaviar as generate_z_scores_phenotype {
+            input:
+              in_file = select_variants_phenotype_summary.out_file,
+              id_col = phenotype_variants_summary.variant_id_col,
+              p_col = phenotype_variants_summary.p_value_col,
+              out_file_name = "z_scores_phenotype_" + cohort_name
+          }
+          call generate_z_scores_for_ecaviar as generate_z_scores_expression {
+            input:
+              in_file = select_variants_phenotype_summary.out_file,
+              id_col = tissue.summary.variant_id_col,
+              p_col = tissue.summary.p_value_col,
+              out_file_name = "z_scores_phenotype_" + cohort_name
+          }
+          call ecaviar {
+            input:
+              ld_file1 = calculate_phenotype_correlations.out_file,
+              z_file1 = generate_z_scores_phenotype.out_file,
+              ld_file2 = calculate_expression_correlations.out_file,
+              z_file2 = generate_z_scores_expression.out_file,
+              out_file_name = "ecaviar_" + cohort_name
+          }
         }
       }
     }
+    String region_report_file_name = "report_" + region_notation
+    call write_strings_to_file as summarize_tissue_reports {
+      input:
+        strings = report_by_region_tissue,
+        out_file_name = region_report_file_name
+    }
+    String report_by_region = read_string(summarize_tissue_reports.out_file)
+  }
+  String report_file_name = "report"
+  call write_strings_to_file as summarize_region_reports {
+    input:
+      strings = report_by_region,
+      out_file_name = report_file_name
   }
 }
 
@@ -612,6 +632,25 @@ task ecaviar {
   }
   command <<<
     eCAVIAR -l ~{ld_file1} -z ~{z_file1} -l ~{ld_file2} -z ~{z_file2} -o ~{out_file_name}
+  >>>
+  output {
+    File out_file = out_file_name
+  }
+}
+
+task write_strings_to_file {
+  input {
+    String out_file_name
+    Array[String] strings
+  }
+  runtime {
+    docker: "gcr.io/broad-gdr-dig-storage/cumulonimbus-ecaviar:190528"
+    cpu: 1
+    memory: "5 GB"
+    disks: "local-disk 20 HDD"
+  }
+  command <<<
+    mv ~{write_lines(strings)} ~{out_file_name}
   >>>
   output {
     File out_file = out_file_name
