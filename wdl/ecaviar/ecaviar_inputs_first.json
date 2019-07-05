@@ -2,8 +2,8 @@
   "ecaviar.p_value_limit": "5e-8",
   "ecaviar.region_padding": "150000",
   "ecaviar.phenotype_samples": {
-    "vcf_bgz": "gs://oliver-cromwell/data/ecaviar/first/1kg/shapeit2_mvncall_integrated_v4.20130502.chr16.vcf.bgz",
-    "vcf_bgz_tbi": "gs://oliver-cromwell/data/ecaviar/first/1kg/shapeit2_mvncall_integrated_v4.20130502.chr16.vcf.bgz.tbi"
+    "vcf_bgz": "gs://oliver-cromwell/data/ecaviar/first/1kg/shapeit2_mvncall_integrated_v4.20130502.chr16.vcf.gz",
+    "vcf_bgz_tbi": "gs://oliver-cromwell/data/ecaviar/first/1kg/shapeit2_mvncall_integrated_v4.20130502.chr16.vcf.gz.tbi"
   },
   "ecaviar.phenotype_variants_summary": {
     "file": "gs://oliver-cromwell/data/ecaviar/first/portal/T2D.initial.sumstats",
@@ -16,8 +16,8 @@
   },
   "ecaviar.expression_data": {
     "samples_files": {
-      "vcf_bgz": "gs://oliver-cromwell/data/ecaviar/gtex/GTEx_Analysis_2016-01-15_v7_WholeGenomeSeq_635Ind_PASS_AB02_GQ20_HETX_MISS15_PLINKQC.chr16.hg38.vcf.gz",
-      "vcf_bgz_tbi": "gs://oliver-cromwell/data/ecaviar/gtex/GTEx_Analysis_2016-01-15_v7_WholeGenomeSeq_635Ind_PASS_AB02_GQ20_HETX_MISS15_PLINKQC.chr16.hg38.vcf.gz.tbi"
+      "vcf_bgz": "gs://oliver-cromwell/data/ecaviar/first/1kg/shapeit2_mvncall_integrated_v4.20130502.chr16.vcf.gz",
+      "vcf_bgz_tbi": "gs://oliver-cromwell/data/ecaviar/first/1kg/shapeit2_mvncall_integrated_v4.20130502.chr16.vcf.gz.tbi"
     },
     "tissues": [
       {
