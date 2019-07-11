@@ -27,7 +27,7 @@
           "file": "gs://oliver-cromwell/data/ecaviar/first/eqtl/tissues/Adipose_Visceral_Omentum.eqtl",
           "p_value_col": "pval_nominal",
           "variant_id_col": "variant_id",
-          "chromosome_col": "chr",
+          "chromosome_col": "chrom",
           "position_col": "pos",
           "ref_col": "ref",
           "alt_col": "alt"
@@ -40,7 +40,7 @@
           "file": "gs://oliver-cromwell/data/ecaviar/first/eqtl/tissues/Pancreas.eqtl",
           "p_value_col": "pval_nominal",
           "variant_id_col": "variant_id",
-          "chromosome_col": "chr",
+          "chromosome_col": "chrom",
           "position_col": "pos",
           "ref_col": "ref",
           "alt_col": "alt"
@@ -53,7 +53,7 @@
           "file": "gs://oliver-cromwell/data/ecaviar/first/eqtl/tissues/Stomach.eqtl",
           "p_value_col": "pval_nominal",
           "variant_id_col": "variant_id",
-          "chromosome_col": "chr",
+          "chromosome_col": "chrom",
           "position_col": "pos",
           "ref_col": "ref",
           "alt_col": "alt"

@@ -264,7 +264,7 @@ workflow ecaviar {
     input:
       strings = report_by_region,
       out_file_name = report_file_name
-  }
+   }
 }
 
 task canonicalize_samples {
