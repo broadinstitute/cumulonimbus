@@ -186,67 +186,70 @@ workflow ecaviar {
               out_tsv1_only_name = "variants_not_in_expression_summary_" + cohort_name,
               out_tsv2_only_name = "variants_only_in_expression_summary_" + cohort_name,
           }
-          call select_variants_tsv as select_variants_phenotype_summary {
-            input:
-              data_file = sort_phenotype_summary.out_file,
-              selection_file = match_variants_with_expression_summary.out_both,
-              col_in_data = phenotype_variants_summary.variant_id_col,
-              col_in_selection = tissue.summary.variant_id_col,
-              out_file_name = "phenotype_summary_selected_variants_" + cohort_name
-          }
-          call select_variants_tsv as select_variants_expression_summary {
-            input:
-              data_file = sort_cohort_by_position.out_file,
-              selection_file = match_variants_with_expression_summary.out_both,
-              col_in_data = tissue.summary.variant_id_col,
-              col_in_selection = tissue.summary.variant_id_col,
-              out_file_name = "expression_summary_selected_variants_" + cohort_name
-          }
-          call select_variants_vcf as select_variants_phenotype_samples {
-            input:
-              data_file = clip_region_from_phenotype_samples.out_file,
-              selection_file = match_variants_with_expression_summary.out_both,
-              col_in_selection = tissue.summary.variant_id_col,
-              out_file_name = "phenotype_samples_selected_variants_" + cohort_name + ".vcf"
-          }
-          call select_variants_vcf as select_variants_expression_samples {
-            input:
-              data_file = clip_region_from_expression_samples.out_file,
-              selection_file = match_variants_with_expression_summary.out_both,
-              col_in_selection = tissue.summary.variant_id_col,
-              out_file_name = "expression_samples_selected_variants_" + cohort_name + ".vcf"
-          }
-          call calculate_correlations as calculate_phenotype_correlations {
-            input:
-              in_file = select_variants_phenotype_samples.out_file,
-              out_file_name = "phenotype_correlations_" + cohort_name
-          }
-          call calculate_correlations as calculate_expression_correlations {
-            input:
-              in_file = select_variants_expression_samples.out_file,
-              out_file_name = "expression_correlations_" + cohort_name
-          }
-          call generate_z_scores_for_ecaviar as generate_z_scores_phenotype {
-            input:
-              in_file = select_variants_phenotype_summary.out_file,
-              id_col = phenotype_variants_summary.variant_id_col,
-              p_col = phenotype_variants_summary.p_value_col,
-              out_file_name = "z_scores_phenotype_" + cohort_name
-          }
-          call generate_z_scores_for_ecaviar as generate_z_scores_expression {
-            input:
-              in_file = select_variants_phenotype_summary.out_file,
-              id_col = tissue.summary.variant_id_col,
-              p_col = tissue.summary.p_value_col,
-              out_file_name = "z_scores_phenotype_" + cohort_name
-          }
-          call ecaviar {
-            input:
-              ld_file1 = calculate_phenotype_correlations.out_file,
-              z_file1 = generate_z_scores_phenotype.out_file,
-              ld_file2 = calculate_expression_correlations.out_file,
-              z_file2 = generate_z_scores_expression.out_file,
-              out_file_name = "ecaviar_" + cohort_name
+          Int n_selected_variants = length(read_lines(match_variants_with_expression_summary.out_both)) - 1
+          if(n_selected_variants > 1) {
+            call select_variants_tsv as select_variants_phenotype_summary {
+              input:
+                data_file = sort_phenotype_summary.out_file,
+                selection_file = match_variants_with_expression_summary.out_both,
+                col_in_data = phenotype_variants_summary.variant_id_col,
+                col_in_selection = tissue.summary.variant_id_col,
+                out_file_name = "phenotype_summary_selected_variants_" + cohort_name
+            }
+            call select_variants_tsv as select_variants_expression_summary {
+              input:
+                data_file = sort_cohort_by_position.out_file,
+                selection_file = match_variants_with_expression_summary.out_both,
+                col_in_data = tissue.summary.variant_id_col,
+                col_in_selection = tissue.summary.variant_id_col,
+                out_file_name = "expression_summary_selected_variants_" + cohort_name
+            }
+            call select_variants_vcf as select_variants_phenotype_samples {
+              input:
+                data_file = clip_region_from_phenotype_samples.out_file,
+                selection_file = match_variants_with_expression_summary.out_both,
+                col_in_selection = tissue.summary.variant_id_col,
+                out_file_name = "phenotype_samples_selected_variants_" + cohort_name + ".vcf"
+            }
+            call select_variants_vcf as select_variants_expression_samples {
+              input:
+                data_file = clip_region_from_expression_samples.out_file,
+                selection_file = match_variants_with_expression_summary.out_both,
+                col_in_selection = tissue.summary.variant_id_col,
+                out_file_name = "expression_samples_selected_variants_" + cohort_name + ".vcf"
+            }
+            call calculate_correlations as calculate_phenotype_correlations {
+              input:
+                in_file = select_variants_phenotype_samples.out_file,
+                out_file_name = "phenotype_correlations_" + cohort_name
+            }
+            call calculate_correlations as calculate_expression_correlations {
+              input:
+                in_file = select_variants_expression_samples.out_file,
+                out_file_name = "expression_correlations_" + cohort_name
+            }
+            call generate_z_scores_for_ecaviar as generate_z_scores_phenotype {
+              input:
+                in_file = select_variants_phenotype_summary.out_file,
+                id_col = phenotype_variants_summary.variant_id_col,
+                p_col = phenotype_variants_summary.p_value_col,
+                out_file_name = "z_scores_phenotype_" + cohort_name
+            }
+            call generate_z_scores_for_ecaviar as generate_z_scores_expression {
+              input:
+                in_file = select_variants_phenotype_summary.out_file,
+                id_col = tissue.summary.variant_id_col,
+                p_col = tissue.summary.p_value_col,
+                out_file_name = "z_scores_phenotype_" + cohort_name
+            }
+            call ecaviar {
+              input:
+                ld_file1 = calculate_phenotype_correlations.out_file,
+                z_file1 = generate_z_scores_phenotype.out_file,
+                ld_file2 = calculate_expression_correlations.out_file,
+                z_file2 = generate_z_scores_expression.out_file,
+                out_file_name = "ecaviar_" + cohort_name
+            }
           }
         }
       }
