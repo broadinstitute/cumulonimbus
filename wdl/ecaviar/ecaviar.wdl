@@ -92,7 +92,7 @@ workflow ecaviar {
     String chromosome = region[phenotype_variants_summary.chromosome_col]
     Int start = region[region_start_col]
     Int end = region[region_end_col]
-    String region_notation = chromosome + ":" + start + "-" + end
+    String region_notation = chromosome + "_" + start + "-" + end
     call clip_region_from_samples as clip_region_from_phenotype_samples {
       input:
         samples_files = canonicalize_phenotype_samples.out_files,
