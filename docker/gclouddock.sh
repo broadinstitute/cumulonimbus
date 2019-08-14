@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-project="broad-gdr-dig-storage"
+project="v2f-public-resources"
 name=$1
 tag=$2
 #if [[ -z ${project} ]]; then
