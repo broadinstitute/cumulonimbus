@@ -26,11 +26,6 @@ struct ExpressionData {
   Array[Tissue] tissues
 }
 
-struct FileWithCount {
-  File file
-  Int count
-}
-
 workflow ecaviar {
   input {
     SamplesFiles phenotype_samples
@@ -121,13 +116,13 @@ workflow ecaviar {
     }
     call sort_file_by_col as sort_phenotype_summary {
       input:
-        in_file = clip_region_from_phenotype_summary.out.file,
+        in_file = clip_region_from_phenotype_summary.out_file,
         col = phenotype_variants_summary.position_col,
         out_file_name = "phenotype_summary_sorted_" + region_notation
     }
     call match_variants_vcf_tsv as match_variants_phenotype_samples_summary {
       input:
-        in_vcf = clip_region_from_phenotype_samples.out.file,
+        in_vcf = clip_region_from_phenotype_samples.out_file,
         in_tsv = sort_phenotype_summary.out_file,
         id_col = phenotype_variants_summary.variant_id_col,
         out_both_name = "phenotype_common_" + region_notation,
@@ -136,8 +131,8 @@ workflow ecaviar {
     }
     call match_variants_vcf_tsv as match_variants_phenotype_expression_samples {
       input:
-        in_vcf = clip_region_from_expression_samples.out.file,
-        in_tsv = match_variants_phenotype_samples_summary.out_both.file,
+        in_vcf = clip_region_from_expression_samples.out_file,
+        in_tsv = match_variants_phenotype_samples_summary.out_both,
         id_col = phenotype_variants_summary.variant_id_col,
         out_both_name = "phenotype_expression_samples_" + region_notation,
         out_vcf_only_name = "expression_samples_only_" + region_notation,
@@ -154,14 +149,14 @@ workflow ecaviar {
           end = end,
           out_file_name = "summary_" + tissue.tissue_name + "_" + region_notation
       }
-      Int n_expression_entries = clip_region_from_expression_summary.out.count
+      Int n_expression_entries = clip_region_from_expression_summary.count
       String report_by_region_tissue =
         "Tissue " + tissue.tissue_name + " in region " + region_notation + " has " +
         n_expression_entries + " expression entries."
       if(n_expression_entries > 0) {
         call extract_unique as extract_genes {
           input:
-            in_file = clip_region_from_expression_summary.out.file,
+            in_file = clip_region_from_expression_summary.out_file,
             col = tissue.gene_id_col,
             out_file_name = "genes_" + tissue.tissue_name + "_" + region_notation
         }
@@ -170,7 +165,7 @@ workflow ecaviar {
           String cohort_name = gene_id + "_" + tissue.tissue_name + "_" + region_notation
           call slice_by_value as slice_by_gene_id {
             input:
-              in_file = clip_region_from_expression_summary.out.file,
+              in_file = clip_region_from_expression_summary.out_file,
               col = tissue.gene_id_col,
               value = gene_id,
               out_file_name = "summary_" + cohort_name
@@ -184,19 +179,19 @@ workflow ecaviar {
           call match_variants_tsv_tsv as match_variants_with_expression_summary {
             input:
               in_tsv1 = sort_cohort_by_position.out_file,
-              in_tsv2 = match_variants_phenotype_expression_samples.out_both.file,
+              in_tsv2 = match_variants_phenotype_expression_samples.out_both,
               id_col1 = tissue.summary.variant_id_col,
               id_col2 = phenotype_variants_summary.variant_id_col,
               out_both_name = "variants_" + cohort_name,
               out_tsv1_only_name = "variants_not_in_expression_summary_" + cohort_name,
               out_tsv2_only_name = "variants_only_in_expression_summary_" + cohort_name,
           }
-          Int n_selected_variants = match_variants_with_expression_summary.out_both.count
+          Int n_selected_variants = match_variants_with_expression_summary.out_both_count
           if(n_selected_variants > 1) {
             call select_variants_tsv as select_variants_phenotype_summary {
               input:
                 data_file = sort_phenotype_summary.out_file,
-                selection_file = match_variants_with_expression_summary.out_both.file,
+                selection_file = match_variants_with_expression_summary.out_both,
                 col_in_data = phenotype_variants_summary.variant_id_col,
                 col_in_selection = tissue.summary.variant_id_col,
                 out_file_name = "phenotype_summary_selected_variants_" + cohort_name
@@ -204,22 +199,22 @@ workflow ecaviar {
             call select_variants_tsv as select_variants_expression_summary {
               input:
                 data_file = sort_cohort_by_position.out_file,
-                selection_file = match_variants_with_expression_summary.out_both.file,
+                selection_file = match_variants_with_expression_summary.out_both,
                 col_in_data = tissue.summary.variant_id_col,
                 col_in_selection = tissue.summary.variant_id_col,
                 out_file_name = "expression_summary_selected_variants_" + cohort_name
             }
             call select_variants_vcf as select_variants_phenotype_samples {
               input:
-                data_file = clip_region_from_phenotype_samples.out.file,
-                selection_file = match_variants_with_expression_summary.out_both.file,
+                data_file = clip_region_from_phenotype_samples.out_file,
+                selection_file = match_variants_with_expression_summary.out_both,
                 col_in_selection = tissue.summary.variant_id_col,
                 out_file_name = "phenotype_samples_selected_variants_" + cohort_name + ".vcf"
             }
             call select_variants_vcf as select_variants_expression_samples {
               input:
-                data_file = clip_region_from_expression_samples.out.file,
-                selection_file = match_variants_with_expression_summary.out_both.file,
+                data_file = clip_region_from_expression_samples.out_file,
+                selection_file = match_variants_with_expression_summary.out_both,
                 col_in_selection = tissue.summary.variant_id_col,
                 out_file_name = "expression_samples_selected_variants_" + cohort_name + ".vcf"
             }
@@ -394,7 +389,8 @@ task clip_region_from_samples {
     grep "#" -v ~{out_file_name} |wc -l > ~{out_count_file_name}
   >>>
   output {
-    FileWithCount out = { "file": out_file_name, "count": read_int(out_count_file_name) }
+    File out_file = out_file_name
+    Int count = read_int(out_count_file_name)
   }
 }
 
@@ -423,7 +419,8 @@ task clip_region_from_summary {
     tail -n +2 ~{out_file_name} | wc -l > ~{out_count_file_name}
   >>>
   output {
-    FileWithCount out = { "file": out_file_name, "count": read_int(out_count_file_name) }
+    File out_file = out_file_name
+    Int count = read_int(out_count_file_name)
   }
 }
 
@@ -475,9 +472,12 @@ task match_variants_vcf_tsv {
     tail -n +2 ~{out_tsv_only_name} | wc -l > ~{out_tsv_only_count_name}
   >>>
   output {
-    FileWithCount out_both = { "file": out_both_name, "count" : read_int(out_both_count_name) }
-    FileWithCount out_vcf_only = { "file": out_vcf_only_name, "count" : read_int(out_vcf_only_count_name) }
-    FileWithCount out_tsv_only = { "file": out_tsv_only_name, "count" : read_int(out_tsv_only_count_name) }
+    File out_both = out_both_name
+    Int out_both_count = read_int(out_both_count_name)
+    File out_vcf_only = out_vcf_only_name
+    Int out_vcf_only_count = read_int(out_vcf_only_count_name)
+    File out_tsv_only = out_tsv_only_name
+    Int out_tsv_only_count = read_int(out_tsv_only_count_name)
   }
 }
 
@@ -510,9 +510,12 @@ task match_variants_tsv_tsv {
     tail -n +2 ~{out_tsv2_only_name} | wc -l > ~{out_tsv2_only_count_name}
   >>>
   output {
-    FileWithCount out_both = { "file": out_both_name, "count" : read_int(out_both_count_name) }
-    FileWithCount out_tsv1_only = { "file": out_tsv1_only_name, "count" : read_int(out_tsv1_only_count_name) }
-    FileWithCount out_tsv2_only = { "file": out_tsv2_only_name, "count" : read_int(out_tsv2_only_count_name) }
+    File out_both = out_both_name
+    Int out_both_count = read_int(out_both_count_name)
+    File out_tsv1_only = out_tsv1_only_name
+    Int out_tsv1_only_count = read_int(out_tsv1_only_count_name)
+    File out_tsv2_only = out_tsv2_only_name
+    Int out_tsv2_only_count = read_int(out_tsv2_only_count_name)
   }
 }
 
