@@ -240,7 +240,7 @@ workflow ecaviar {
                 in_file = select_variants_expression_summary.out_file,
                 id_col = tissue.summary.variant_id_col,
                 p_col = tissue.summary.p_value_col,
-                out_file_name = "z_scores_phenotype_" + cohort_name
+                out_file_name = "z_scores_expression_" + cohort_name
             }
             call ecaviar {
               input:
