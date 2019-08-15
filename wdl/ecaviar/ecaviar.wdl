@@ -276,7 +276,7 @@ task canonicalize_samples {
     String out_files_base_name
   }
   runtime {
-    docker: "gcr.io/v2f-public-resources/cumulonimbus-ecaviar:190814"
+    docker: "gcr.io/v2f-public-resources/cumulonimbus-ecaviar:190815"
     cpu: 1
     memory: "5 GB"
     disks: "local-disk 20 HDD"
@@ -301,7 +301,7 @@ task canonicalize_summary {
     String out_file_name
   }
   runtime {
-    docker: "gcr.io/v2f-public-resources/cumulonimbus-ecaviar:190814"
+    docker: "gcr.io/v2f-public-resources/cumulonimbus-ecaviar:190815"
     cpu: 1
     memory: "5 GB"
     disks: "local-disk 20 HDD"
@@ -332,7 +332,7 @@ task get_phenotype_significant_variants {
     String out_file_name
   }
   runtime {
-    docker: "gcr.io/v2f-public-resources/cumulonimbus-ecaviar:190814"
+    docker: "gcr.io/v2f-public-resources/cumulonimbus-ecaviar:190815"
     cpu: 1
     memory: "5 GB"
     disks: "local-disk 20 HDD"
@@ -354,7 +354,7 @@ task get_regions_around_significance {
     String out_file_name
   }
   runtime {
-    docker: "gcr.io/v2f-public-resources/cumulonimbus-ecaviar:190814"
+    docker: "gcr.io/v2f-public-resources/cumulonimbus-ecaviar:190815"
     cpu: 1
     memory: "5 GB"
     disks: "local-disk 20 HDD"
@@ -379,7 +379,7 @@ task clip_region_from_samples {
   String count_suffix = ".count"
   String out_count_file_name = out_file_name + count_suffix
   runtime {
-    docker: "gcr.io/v2f-public-resources/cumulonimbus-ecaviar:190814"
+    docker: "gcr.io/v2f-public-resources/cumulonimbus-ecaviar:190815"
     cpu: 1
     memory: "5 GB"
     disks: "local-disk 20 HDD"
@@ -407,7 +407,7 @@ task clip_region_from_summary {
   String count_suffix = ".count"
   String out_count_file_name = out_file_name + count_suffix
   runtime {
-    docker: "gcr.io/v2f-public-resources/cumulonimbus-ecaviar:190814"
+    docker: "gcr.io/v2f-public-resources/cumulonimbus-ecaviar:190815"
     cpu: 1
     memory: "5 GB"
     disks: "local-disk 20 HDD"
@@ -431,7 +431,7 @@ task sort_file_by_col {
     String out_file_name
   }
   runtime {
-    docker: "gcr.io/v2f-public-resources/cumulonimbus-ecaviar:190814"
+    docker: "gcr.io/v2f-public-resources/cumulonimbus-ecaviar:190815"
     cpu: 1
     memory: "5 GB"
     disks: "local-disk 20 HDD"
@@ -458,7 +458,7 @@ task match_variants_vcf_tsv {
   String out_vcf_only_count_name = out_vcf_only_name + count_suffix
   String out_tsv_only_count_name = out_tsv_only_name + count_suffix
   runtime {
-    docker: "gcr.io/v2f-public-resources/cumulonimbus-ecaviar:190814"
+    docker: "gcr.io/v2f-public-resources/cumulonimbus-ecaviar:190815"
     cpu: 1
     memory: "5 GB"
     disks: "local-disk 20 HDD"
@@ -496,7 +496,7 @@ task match_variants_tsv_tsv {
   String out_tsv1_only_count_name = out_tsv1_only_name + count_suffix
   String out_tsv2_only_count_name = out_tsv2_only_name + count_suffix
   runtime {
-    docker: "gcr.io/v2f-public-resources/cumulonimbus-ecaviar:190814"
+    docker: "gcr.io/v2f-public-resources/cumulonimbus-ecaviar:190815"
     cpu: 1
     memory: "5 GB"
     disks: "local-disk 20 HDD"
@@ -526,7 +526,7 @@ task extract_unique {
     String out_file_name
   }
   runtime {
-    docker: "gcr.io/v2f-public-resources/cumulonimbus-ecaviar:190814"
+    docker: "gcr.io/v2f-public-resources/cumulonimbus-ecaviar:190815"
     cpu: 1
     memory: "5 GB"
     disks: "local-disk 20 HDD"
@@ -547,7 +547,7 @@ task slice_by_value {
     String out_file_name
   }
   runtime {
-    docker: "gcr.io/v2f-public-resources/cumulonimbus-ecaviar:190814"
+    docker: "gcr.io/v2f-public-resources/cumulonimbus-ecaviar:190815"
     cpu: 1
     memory: "5 GB"
     disks: "local-disk 20 HDD"
@@ -569,7 +569,7 @@ task select_variants_tsv {
     String out_file_name
   }
   runtime {
-    docker: "gcr.io/v2f-public-resources/cumulonimbus-ecaviar:190814"
+    docker: "gcr.io/v2f-public-resources/cumulonimbus-ecaviar:190815"
     cpu: 1
     memory: "5 GB"
     disks: "local-disk 20 HDD"
@@ -591,7 +591,7 @@ task select_variants_vcf {
     String out_file_name
   }
   runtime {
-    docker: "gcr.io/v2f-public-resources/cumulonimbus-ecaviar:190814"
+    docker: "gcr.io/v2f-public-resources/cumulonimbus-ecaviar:190815"
     cpu: 1
     memory: "5 GB"
     disks: "local-disk 20 HDD"
@@ -611,7 +611,7 @@ task calculate_correlations {
     String out_file_name
   }
   runtime {
-    docker: "gcr.io/v2f-public-resources/cumulonimbus-ecaviar:190814"
+    docker: "gcr.io/v2f-public-resources/cumulonimbus-ecaviar:190815"
     cpu: 1
     memory: "5 GB"
     disks: "local-disk 20 HDD"
@@ -637,7 +637,7 @@ task generate_z_scores_for_ecaviar {
     String out_file_name
   }
   runtime {
-    docker: "gcr.io/v2f-public-resources/cumulonimbus-ecaviar:190814"
+    docker: "gcr.io/v2f-public-resources/cumulonimbus-ecaviar:190815"
     cpu: 1
     memory: "5 GB"
     disks: "local-disk 20 HDD"
@@ -662,7 +662,7 @@ task ecaviar {
     String out_file_name
   }
   runtime {
-    docker: "gcr.io/v2f-public-resources/cumulonimbus-ecaviar:190814"
+    docker: "gcr.io/v2f-public-resources/cumulonimbus-ecaviar:190815"
     cpu: 1
     memory: "5 GB"
     disks: "local-disk 20 HDD"
@@ -681,7 +681,7 @@ task write_strings_to_file {
     Array[String] strings
   }
   runtime {
-    docker: "gcr.io/v2f-public-resources/cumulonimbus-ecaviar:190814"
+    docker: "gcr.io/v2f-public-resources/cumulonimbus-ecaviar:190815"
     cpu: 1
     memory: "5 GB"
     disks: "local-disk 20 HDD"
