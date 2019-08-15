@@ -618,6 +618,9 @@ task calculate_correlations {
   }
   command <<<
     plink --vcf ~{in_file} --a1-allele ~{in_file} 4 3 '#' --r --out plink
+    echo "= = = First lines from the correlations file created by Plink = = ="
+    head plink.ld
+    echo "= = = Done with correlations file created by Plink = = ="
     chowser caviar matrix --ids-file ~{in_file} --values-file plink.ld \
       --value-col R --id-col1 SNP_A --id-col2 SNP_B --out ~{out_file_name}
   >>>
@@ -640,6 +643,9 @@ task generate_z_scores_for_ecaviar {
     disks: "local-disk 20 HDD"
   }
   command <<<
+    echo "= = = First lines of file containing p-values = = ="
+    head ~{in_file}
+    echo "= = = Done with file containing p-values"
     chowser caviar p-to-z --in ~{in_file} --out ~{out_file_name} --id-col ~{id_col} --p-col ~{p_col}
   >>>
   output {
