@@ -237,7 +237,7 @@ workflow ecaviar {
             }
             call generate_z_scores_for_ecaviar as generate_z_scores_expression {
               input:
-                in_file = select_variants_phenotype_summary.out_file,
+                in_file = select_variants_expression_summary.out_file,
                 id_col = tissue.summary.variant_id_col,
                 p_col = tissue.summary.p_value_col,
                 out_file_name = "z_scores_phenotype_" + cohort_name
