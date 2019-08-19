@@ -16,5 +16,5 @@ fi
 full="cumulonimbus-${name}:${tag}"
 echo "Using Google project ${project}, Docker project ${name}, full tag ${full}"
 echo "Submitting"
-gcloud builds submit --tag gcr.io/${project}/${full} ~/git/cumulonimbus/docker/${name}
+gcloud builds submit --timeout=60m --tag gcr.io/${project}/${full} ~/git/cumulonimbus/docker/${name}
 echo "Done"
