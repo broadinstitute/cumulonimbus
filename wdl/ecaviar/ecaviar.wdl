@@ -170,9 +170,14 @@ workflow ecaviar {
               value = gene_id,
               out_file_name = "summary_" + cohort_name
           }
+          call canonicalize_summary as canonicalize_expression_summary {
+            input:
+              summary = tissue.summary,
+              out_file_name = "summary_canon_" + cohort_name
+          }
           call sort_file_by_col as sort_cohort_by_position {
             input:
-              in_file = slice_by_gene_id.out_file,
+              in_file = canonicalize_expression_summary.summary_canonical.file,
               col = tissue.summary.position_col,
               out_file_name = "summary_sorted_" + cohort_name
           }
@@ -248,7 +253,7 @@ workflow ecaviar {
                 z_file1 = generate_z_scores_phenotype.out_file,
                 ld_file2 = calculate_expression_correlations.out_file,
                 z_file2 = generate_z_scores_expression.out_file,
-                out_file_name = "ecaviar_" + cohort_name
+                out_files_base_name = "ecaviar_" + cohort_name
             }
           }
         }
@@ -659,7 +664,7 @@ task ecaviar {
     File z_file1
     File ld_file2
     File z_file2
-    String out_file_name
+    String out_files_base_name
   }
   runtime {
     docker: "gcr.io/v2f-public-resources/cumulonimbus-ecaviar:190819"
@@ -668,10 +673,14 @@ task ecaviar {
     disks: "local-disk 20 HDD"
   }
   command <<<
-    eCAVIAR -l ~{ld_file1} -z ~{z_file1} -l ~{ld_file2} -z ~{z_file2} -o ~{out_file_name}
+    eCAVIAR -l ~{ld_file1} -z ~{z_file1} -l ~{ld_file2} -z ~{z_file2} -o ~{out_files_base_name}
   >>>
   output {
-    File out_file = out_file_name
+    File out_file_col = out_files_base_name + "_col"
+    File out_file_1_set = out_files_base_name + "_1_set"
+    File out_file_1_post = out_files_base_name + "_1_post"
+    File out_file_2_set = out_files_base_name + "_2_set"
+    File out_file_2_post = out_files_base_name + "_2_post"
   }
 }
 
