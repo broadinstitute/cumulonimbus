@@ -170,9 +170,18 @@ workflow ecaviar {
               value = gene_id,
               out_file_name = "summary_" + cohort_name
           }
+          VariantsSummary expression_summary_for_gene = {
+            "file" : slice_by_gene_id.out_file,
+            "variant_id_col" : tissue.summary.variant_id_col,
+            "p_value_col" : tissue.summary.p_value_col,
+            "chromosome_col" : tissue.summary.chromosome_col,
+            "position_col" : tissue.summary.position_col,
+            "ref_col" : tissue.summary.ref_col,
+            "alt_col" : tissue.summary.alt_col
+          }
           call canonicalize_summary as canonicalize_expression_summary {
             input:
-              summary = tissue.summary,
+              summary = expression_summary_for_gene,
               out_file_name = "summary_canon_" + cohort_name
           }
           call sort_file_by_col as sort_cohort_by_position {
