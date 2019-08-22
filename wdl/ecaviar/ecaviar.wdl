@@ -296,9 +296,11 @@ task canonicalize_samples {
     disks: "local-disk 20 HDD"
   }
   command <<<
-    gunzip -c ~{in_files.vcf_bgz} >variants_temp.vcf
-    chowser variants canonicalize-vcf --in variants_temp.vcf --out ~{out_files_base_name}.vcf
-    bgzip -c ~{out_files_base_name}.vcf > ~{out_files_base_name}.vcf.bgz
+    mkfifo inputpipe.vcf
+    mkfifo outputpipe.vcf
+    gunzip -c ~{in_files.vcf_bgz} >inputpipe.vcf
+    chowser variants canonicalize-vcf --in inputpipe.vcf --out outputpipe.vcf
+    bgzip -c outputpipe.vcf > ~{out_files_base_name}.vcf.bgz
     tabix -p vcf ~{out_files_base_name}.vcf.bgz
   >>>
   output {
