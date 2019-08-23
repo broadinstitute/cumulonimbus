@@ -21,10 +21,36 @@
     },
     "tissues": [
       {
+        "tissue_name": "Adipose_Visceral_Omentum",
+        "gene_id_col": "gene_id",
+        "summary": {
+          "file": "gs://fc-0da7007b-1c23-49ac-985b-9aaa6774a033/example/eqtl/tissues/Adipose_Visceral_Omentum.eqtl",
+          "p_value_col": "pval_nominal",
+          "variant_id_col": "variant_id",
+          "chromosome_col": "chrom",
+          "position_col": "pos",
+          "ref_col": "ref",
+          "alt_col": "alt"
+        }
+      },
+      {
         "tissue_name": "Pancreas",
         "gene_id_col": "gene_id",
         "summary": {
           "file": "gs://fc-0da7007b-1c23-49ac-985b-9aaa6774a033/example/eqtl/tissues/Pancreas.eqtl",
+          "p_value_col": "pval_nominal",
+          "variant_id_col": "variant_id",
+          "chromosome_col": "chrom",
+          "position_col": "pos",
+          "ref_col": "ref",
+          "alt_col": "alt"
+        }
+      },
+      {
+        "tissue_name": "Stomach",
+        "gene_id_col": "gene_id",
+        "summary": {
+          "file": "gs://fc-0da7007b-1c23-49ac-985b-9aaa6774a033/example/eqtl/tissues/Stomach.eqtl",
           "p_value_col": "pval_nominal",
           "variant_id_col": "variant_id",
           "chromosome_col": "chrom",
