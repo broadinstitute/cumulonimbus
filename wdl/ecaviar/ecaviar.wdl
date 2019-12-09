@@ -35,19 +35,11 @@ workflow ecaviar {
     ExpressionData expression_data
   }
 
-  String phenotype_summary_canonicalized_name = "phenotype_summary_canon"
-
-  call canonicalize_summary as canonicalize_phenotype_summary {
-    input:
-      summary = phenotype_variants_summary,
-      out_file_name = phenotype_summary_canonicalized_name
-  }
-
   String significant_variants_file_name = "significant_variants"
 
   call get_phenotype_significant_variants {
     input:
-      in_file = canonicalize_phenotype_summary.summary_canonical.file,
+      in_file = phenotype_variants_summary.file,
       p_value_col = phenotype_variants_summary.p_value_col,
       p_value_limit = p_value_limit,
       out_file_name = significant_variants_file_name
@@ -88,16 +80,6 @@ workflow ecaviar {
         end = end,
         out_file_name = "samples_expression_" + region_notation + ".vcf"
     }
-    call canonicalize_samples as canonicalize_phenotype_samples {
-      input:
-        in_file = clip_region_from_phenotype_samples.out_file,
-        out_file_name = "samples_phenotype_canon_" + region_notation + ".vcf"
-    }
-    call canonicalize_samples as canonicalize_expression_samples {
-      input:
-        in_file = clip_region_from_expression_samples.out_file,
-        out_file_name = "samples_expression_canon_" + region_notation + ".vcf"
-    }
     call clip_region_from_summary as clip_region_from_phenotype_summary {
       input:
         in_file = get_phenotype_significant_variants.out_file,
@@ -116,7 +98,7 @@ workflow ecaviar {
     }
     call match_variants_vcf_tsv as match_variants_phenotype_samples_summary {
       input:
-        in_vcf = canonicalize_phenotype_samples.out_file,
+        in_vcf = clip_region_from_phenotype_samples.out_file,
         in_tsv = sort_phenotype_summary.out_file,
         id_col = phenotype_variants_summary.variant_id_col,
         out_both_name = "phenotype_common_" + region_notation,
@@ -125,7 +107,7 @@ workflow ecaviar {
     }
     call match_variants_vcf_tsv as match_variants_phenotype_expression_samples {
       input:
-        in_vcf = canonicalize_expression_samples.out_file,
+        in_vcf = clip_region_from_expression_samples.out_file,
         in_tsv = match_variants_phenotype_samples_summary.out_both,
         id_col = phenotype_variants_summary.variant_id_col,
         out_both_name = "phenotype_expression_samples_" + region_notation,
@@ -173,14 +155,9 @@ workflow ecaviar {
             "ref_col" : tissue.summary.ref_col,
             "alt_col" : tissue.summary.alt_col
           }
-          call canonicalize_summary as canonicalize_expression_summary {
-            input:
-              summary = expression_summary_for_gene,
-              out_file_name = "summary_canon_" + cohort_name
-          }
           call sort_file_by_col as sort_cohort_by_position {
             input:
-              in_file = canonicalize_expression_summary.summary_canonical.file,
+              in_file = slice_by_gene_id.out_file,
               col = tissue.summary.position_col,
               out_file_name = "summary_sorted_" + cohort_name
           }
@@ -214,14 +191,14 @@ workflow ecaviar {
             }
             call select_variants_vcf as select_variants_phenotype_samples {
               input:
-                data_file = canonicalize_phenotype_samples.out_file,
+                data_file = clip_region_from_phenotype_samples.out_file,
                 selection_file = match_variants_with_expression_summary.out_both,
                 col_in_selection = tissue.summary.variant_id_col,
                 out_file_name = "phenotype_samples_selected_variants_" + cohort_name + ".vcf"
             }
             call select_variants_vcf as select_variants_expression_samples {
               input:
-                data_file = canonicalize_expression_samples.out_file,
+                data_file = clip_region_from_expression_samples.out_file,
                 selection_file = match_variants_with_expression_summary.out_both,
                 col_in_selection = tissue.summary.variant_id_col,
                 out_file_name = "expression_samples_selected_variants_" + cohort_name + ".vcf"
@@ -261,54 +238,6 @@ workflow ecaviar {
           }
         }
       }
-    }
-  }
-}
-
-task canonicalize_samples {
-  input {
-    File in_file
-    String out_file_name
-  }
-  runtime {
-    docker: "gcr.io/v2f-public-resources/cumulonimbus-ecaviar:191206"
-    cpu: 1
-    memory: "5 GB"
-    disks: "local-disk 20 HDD"
-  }
-  command <<<
-    chowser variants canonicalize-vcf --in ~{in_file} --out ~{out_file_name}
-  >>>
-  output {
-    File out_file = out_file_name
-  }
-}
-
-task canonicalize_summary {
-  input {
-    VariantsSummary summary
-    String out_file_name
-  }
-  runtime {
-    docker: "gcr.io/v2f-public-resources/cumulonimbus-ecaviar:191206"
-    cpu: 1
-    memory: "5 GB"
-    disks: "local-disk 20 HDD"
-  }
-  command <<<
-    chowser variants canonicalize-tsv --in ~{summary.file} --out ~{out_file_name} --id-col ~{summary.variant_id_col} \
-      --chrom-col ~{summary.chromosome_col} --pos-col ~{summary.position_col} --ref-col ~{summary.ref_col} \
-      --alt-col ~{summary.alt_col}
-  >>>
-  output {
-    VariantsSummary summary_canonical = {
-        "file" : out_file_name,
-        "variant_id_col" : summary.variant_id_col,
-        "p_value_col" : summary.p_value_col,
-        "chromosome_col" : summary.chromosome_col,
-        "position_col" : summary.position_col,
-        "ref_col" : summary.ref_col,
-        "alt_col" : summary.alt_col
     }
   }
 }
