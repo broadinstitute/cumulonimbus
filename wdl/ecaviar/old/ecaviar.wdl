@@ -262,7 +262,20 @@ workflow ecaviar {
         }
       }
     }
+    String region_report_file_name = "report_" + region_notation
+    call write_strings_to_file as summarize_tissue_reports {
+      input:
+        strings = report_by_region_tissue,
+        out_file_name = region_report_file_name
+    }
+    String report_by_region = read_string(summarize_tissue_reports.out_file)
   }
+  String report_file_name = "report"
+  call write_strings_to_file as summarize_region_reports {
+    input:
+      strings = report_by_region,
+      out_file_name = report_file_name
+   }
 }
 
 task canonicalize_samples {
@@ -667,3 +680,23 @@ task ecaviar {
     File out_file_2_post = out_files_base_name + "_2_post"
   }
 }
+
+task write_strings_to_file {
+  input {
+    String out_file_name
+    Array[String] strings
+  }
+  runtime {
+    docker: "gcr.io/v2f-public-resources/cumulonimbus-ecaviar:191206"
+    cpu: 1
+    memory: "5 GB"
+    disks: "local-disk 20 HDD"
+  }
+  command <<<
+    mv ~{write_lines(strings)} ~{out_file_name}
+  >>>
+  output {
+    File out_file = out_file_name
+  }
+}
+

@@ -1,0 +1,65 @@
+{
+  "ecaviar.p_value_limit": "5e-8",
+  "ecaviar.region_padding": "150000",
+  "ecaviar.phenotype_samples": {
+    "vcf_bgz": "gs://fc-0da7007b-1c23-49ac-985b-9aaa6774a033/example/1kg/ALL.phase3_shapeit2_mvncall_integrated_v5a.20130502.genotypes.vcf.bgz",
+    "vcf_bgz_tbi": "gs://fc-0da7007b-1c23-49ac-985b-9aaa6774a033/example/1kg/ALL.phase3_shapeit2_mvncall_integrated_v5a.20130502.genotypes.vcf.bgz.tbi"
+  },
+  "ecaviar.phenotype_variants_summary": {
+    "file": "gs://fc-0da7007b-1c23-49ac-985b-9aaa6774a033/example/gwas/T2D.initial.sumstats",
+    "p_value_col": "P",
+    "variant_id_col": "SNP",
+    "chromosome_col": "CHR",
+    "position_col": "POS",
+    "ref_col": "A2",
+    "alt_col": "A1"
+  },
+  "ecaviar.expression_data": {
+    "samples_files": {
+      "vcf_bgz": "gs://fc-0da7007b-1c23-49ac-985b-9aaa6774a033/example/1kg/ALL.phase3_shapeit2_mvncall_integrated_v5a.20130502.genotypes.vcf.bgz",
+      "vcf_bgz_tbi": "gs://fc-0da7007b-1c23-49ac-985b-9aaa6774a033/example/1kg/ALL.phase3_shapeit2_mvncall_integrated_v5a.20130502.genotypes.vcf.bgz.tbi"
+    },
+    "tissues": [
+      {
+        "tissue_name": "Adipose_Visceral_Omentum",
+        "gene_id_col": "gene_id",
+        "summary": {
+          "file": "gs://fc-0da7007b-1c23-49ac-985b-9aaa6774a033/example/eqtl/tissues/Adipose_Visceral_Omentum.eqtl",
+          "p_value_col": "pval_nominal",
+          "variant_id_col": "variant_id",
+          "chromosome_col": "chrom",
+          "position_col": "pos",
+          "ref_col": "ref",
+          "alt_col": "alt"
+        }
+      },
+      {
+        "tissue_name": "Pancreas",
+        "gene_id_col": "gene_id",
+        "summary": {
+          "file": "gs://fc-0da7007b-1c23-49ac-985b-9aaa6774a033/example/eqtl/tissues/Pancreas.eqtl",
+          "p_value_col": "pval_nominal",
+          "variant_id_col": "variant_id",
+          "chromosome_col": "chrom",
+          "position_col": "pos",
+          "ref_col": "ref",
+          "alt_col": "alt"
+        }
+      },
+      {
+        "tissue_name": "Stomach",
+        "gene_id_col": "gene_id",
+        "summary": {
+          "file": "gs://fc-0da7007b-1c23-49ac-985b-9aaa6774a033/example/eqtl/tissues/Stomach.eqtl",
+          "p_value_col": "pval_nominal",
+          "variant_id_col": "variant_id",
+          "chromosome_col": "chrom",
+          "position_col": "pos",
+          "ref_col": "ref",
+          "alt_col": "alt"
+        }
+      }
+    ]
+  }
+}
+
