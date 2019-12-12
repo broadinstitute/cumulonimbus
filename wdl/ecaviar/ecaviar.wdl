@@ -203,16 +203,6 @@ workflow ecaviar {
                 col_in_selection = tissue.summary.variant_id_col,
                 out_file_name = "expression_samples_selected_variants_" + cohort_name + ".vcf"
             }
-            call calculate_correlations as calculate_phenotype_correlations {
-              input:
-                in_file = select_variants_phenotype_samples.out_file,
-                out_file_name = "phenotype_correlations_" + cohort_name
-            }
-            call calculate_correlations as calculate_expression_correlations {
-              input:
-                in_file = select_variants_expression_samples.out_file,
-                out_file_name = "expression_correlations_" + cohort_name
-            }
             call ecaviar {
               input:
                 p_value_file1 = select_variants_phenotype_summary.out_file,
@@ -221,8 +211,8 @@ workflow ecaviar {
                 p_value_file2 = select_variants_expression_summary.out_file,
                 id_col2 = tissue.summary.variant_id_col,
                 p_col2 = tissue.summary.p_value_col,
-                ld_file1 = calculate_phenotype_correlations.out_file,
-                ld_file2 = calculate_expression_correlations.out_file,
+                vcf1 = select_variants_phenotype_samples.out_file,
+                vcf2 = select_variants_expression_samples.out_file,
                 out_files_base_name = "ecaviar_" + cohort_name
             }
           }
@@ -513,30 +503,6 @@ task select_variants_vcf {
   }
 }
 
-task calculate_correlations {
-  input {
-    File in_file
-    String out_file_name
-  }
-  runtime {
-    docker: "gcr.io/v2f-public-resources/cumulonimbus-ecaviar:191206"
-    cpu: 1
-    memory: "5 GB"
-    disks: "local-disk 20 HDD"
-  }
-  command <<<
-    plink --vcf ~{in_file} --a1-allele ~{in_file} 4 3 '#' --r --out plink
-    echo "= = = First lines from the correlations file created by Plink = = ="
-    head plink.ld
-    echo "= = = Done with correlations file created by Plink = = ="
-    chowser caviar matrix --ids-file ~{in_file} --values-file plink.ld \
-      --value-col R --id-col1 SNP_A --id-col2 SNP_B --out ~{out_file_name}
-  >>>
-  output {
-    File out_file = out_file_name
-  }
-}
-
 task ecaviar {
   input {
     File p_value_file1
@@ -545,8 +511,8 @@ task ecaviar {
     File p_value_file2
     String id_col2
     String p_col2
-    File ld_file1
-    File ld_file2
+    File vcf1
+    File vcf2
     String out_files_base_name
   }
   runtime {
@@ -556,12 +522,22 @@ task ecaviar {
     disks: "local-disk 20 HDD"
   }
   command <<<
+    echo "= = = Calculating first set of correlations = = ="
+    plink --vcf ~{vcf1} --a1-allele ~{vcf1} 4 3 '#' --r --out plink
+    echo "= = = Casting first set of correlations into a square matrix = = ="
+    chowser caviar matrix --ids-file ~{vcf1} --values-file plink.ld \
+      --value-col R --id-col1 SNP_A --id-col2 SNP_B --out ld_file1
+    echo "= = = Calculating second set of correlations = = ="
+    plink --vcf ~{vcf2} --a1-allele ~{vcf2} 4 3 '#' --r --out plink
+    echo "= = = Casting second set of correlations into a square matrix = = ="
+    chowser caviar matrix --ids-file ~{vcf2} --values-file plink.ld \
+      --value-col R --id-col1 SNP_A --id-col2 SNP_B --out ld_file2
     echo "= = = Calculating first file of Z-values = = ="
     chowser caviar p-to-z --in ~{p_value_file1} --out z_file1 --id-col ~{id_col1} --p-col ~{p_col1}
     echo "= = = Calculating second file of Z-values = = ="
     chowser caviar p-to-z --in ~{p_value_file2} --out z_file2 --id-col ~{id_col2} --p-col ~{p_col2}
     echo "= = = Running eCAVIAR = = ="
-    eCAVIAR -l ~{ld_file1} -z z_file1 -l ~{ld_file2} -z z_file2 -o ~{out_files_base_name}
+    eCAVIAR -l ld_file1 -z z_file1 -l ld_file2 -z z_file2 -o ~{out_files_base_name}
     echo "= = = Done with this task = = ="
   >>>
   output {
