@@ -189,20 +189,6 @@ workflow ecaviar {
                 col_in_selection = tissue.summary.variant_id_col,
                 out_file_name = "expression_summary_selected_variants_" + cohort_name
             }
-            call select_variants_vcf as select_variants_phenotype_samples {
-              input:
-                data_file = clip_region_from_phenotype_samples.out_file,
-                selection_file = match_variants_with_expression_summary.out_both,
-                col_in_selection = tissue.summary.variant_id_col,
-                out_file_name = "phenotype_samples_selected_variants_" + cohort_name + ".vcf"
-            }
-            call select_variants_vcf as select_variants_expression_samples {
-              input:
-                data_file = clip_region_from_expression_samples.out_file,
-                selection_file = match_variants_with_expression_summary.out_both,
-                col_in_selection = tissue.summary.variant_id_col,
-                out_file_name = "expression_samples_selected_variants_" + cohort_name + ".vcf"
-            }
             call ecaviar {
               input:
                 p_value_file1 = select_variants_phenotype_summary.out_file,
@@ -211,8 +197,10 @@ workflow ecaviar {
                 p_value_file2 = select_variants_expression_summary.out_file,
                 id_col2 = tissue.summary.variant_id_col,
                 p_col2 = tissue.summary.p_value_col,
-                vcf1 = select_variants_phenotype_samples.out_file,
-                vcf2 = select_variants_expression_samples.out_file,
+                region_vcf1 = clip_region_from_phenotype_samples.out_file,
+                region_vcf2 = clip_region_from_expression_samples.out_file,
+                selected_variants = match_variants_with_expression_summary.out_both,
+                selected_variant_id_col = tissue.summary.variant_id_col,
                 out_files_base_name = "ecaviar_" + cohort_name
             }
           }
@@ -481,28 +469,6 @@ task select_variants_tsv {
   }
 }
 
-task select_variants_vcf {
-  input {
-    File data_file
-    File selection_file
-    String col_in_selection
-    String out_file_name
-  }
-  runtime {
-    docker: "gcr.io/v2f-public-resources/cumulonimbus-ecaviar:191206"
-    cpu: 1
-    memory: "5 GB"
-    disks: "local-disk 20 HDD"
-  }
-  command <<<
-    chowser variants select-vcf --data ~{data_file} --selection ~{selection_file} --out ~{out_file_name} \
-      --id-col-selection ~{col_in_selection}
-  >>>
-  output {
-    File out_file = out_file_name
-  }
-}
-
 task ecaviar {
   input {
     File p_value_file1
@@ -511,8 +477,10 @@ task ecaviar {
     File p_value_file2
     String id_col2
     String p_col2
-    File vcf1
-    File vcf2
+    File region_vcf1
+    File region_vcf2
+    File selected_variants
+    String selected_variant_id_col
     String out_files_base_name
   }
   runtime {
@@ -522,15 +490,21 @@ task ecaviar {
     disks: "local-disk 20 HDD"
   }
   command <<<
+    echo "= = = Filter selected variants from first region = = ="
+    chowser variants select-vcf --data ~{region_vcf1} --selection ~{selected_variants} --out selected1.vcf \
+      --id-col-selection ~{selected_variant_id_col}
+    echo "= = = Filter selected variants from second region = = ="
+    chowser variants select-vcf --data ~{region_vcf2} --selection ~{selected_variants} --out selected2.vcf \
+      --id-col-selection ~{selected_variant_id_col}    
     echo "= = = Calculating first set of correlations = = ="
-    plink --vcf ~{vcf1} --a1-allele ~{vcf1} 4 3 '#' --r --out plink
+    plink --vcf selected1.vcf --a1-allele selected1.vcf 4 3 '#' --r --out plink
     echo "= = = Casting first set of correlations into a square matrix = = ="
-    chowser caviar matrix --ids-file ~{vcf1} --values-file plink.ld \
+    chowser caviar matrix --ids-file selected1.vcf --values-file plink.ld \
       --value-col R --id-col1 SNP_A --id-col2 SNP_B --out ld_file1
     echo "= = = Calculating second set of correlations = = ="
-    plink --vcf ~{vcf2} --a1-allele ~{vcf2} 4 3 '#' --r --out plink
+    plink --vcf selected2.vcf --a1-allele selected2.vcf 4 3 '#' --r --out plink
     echo "= = = Casting second set of correlations into a square matrix = = ="
-    chowser caviar matrix --ids-file ~{vcf2} --values-file plink.ld \
+    chowser caviar matrix --ids-file selected2.vcf --values-file plink.ld \
       --value-col R --id-col1 SNP_A --id-col2 SNP_B --out ld_file2
     echo "= = = Calculating first file of Z-values = = ="
     chowser caviar p-to-z --in ~{p_value_file1} --out z_file1 --id-col ~{id_col1} --p-col ~{p_col1}
