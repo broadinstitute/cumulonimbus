@@ -139,16 +139,11 @@ workflow ecaviar {
         scatter(gene_entry in read_objects(extract_genes.out_file)) {
           String gene_id = gene_entry[tissue.gene_id_col]
           String cohort_name = gene_id + "_" + tissue.tissue_name + "_" + region_notation
-          call slice_by_value as slice_by_gene_id {
-            input:
-              in_file = clip_region_from_expression_summary.out_file,
-              col = tissue.gene_id_col,
-              value = gene_id,
-              out_file_name = "summary_" + cohort_name
-          }
           call ecaviar {
             input:
-              unsorted2_tsv = slice_by_gene_id.out_file,
+              unsorted_all2_tsv = clip_region_from_expression_summary.out_file,
+              value_col2 = tissue.gene_id_col,
+              value2 = gene_id,
               position_col2 = tissue.summary.position_col,
               intersection_all_but_tsv2 = match_variants_phenotype_expression_samples.out_both,
               intersection_id_col = tissue.summary.variant_id_col,
@@ -324,44 +319,6 @@ task match_variants_vcf_tsv {
   }
 }
 
-task match_variants_tsv_tsv {
-  input {
-    File in_tsv1
-    File in_tsv2
-    String id_col1
-    String id_col2
-    String out_both_name
-    String out_tsv1_only_name
-    String out_tsv2_only_name
-  }
-  String count_suffix = ".count"
-  String out_both_count_name = out_both_name + count_suffix
-  String out_tsv1_only_count_name = out_tsv1_only_name + count_suffix
-  String out_tsv2_only_count_name = out_tsv2_only_name + count_suffix
-  runtime {
-    docker: "gcr.io/v2f-public-resources/cumulonimbus-ecaviar:191206"
-    cpu: 1
-    memory: "5 GB"
-    disks: "local-disk 20 HDD"
-  }
-  command <<<
-    chowser variants match-tsv-tsv \
-      --tsv1 ~{in_tsv1} --tsv2 ~{in_tsv2} --id-col1 ~{id_col1} --id-col2 ~{id_col2}  \
-      --in-both ~{out_both_name} --tsv1-only ~{out_tsv1_only_name} --tsv2-only ~{out_tsv2_only_name}
-    tail -n +2 ~{out_both_name} | wc -l > ~{out_both_count_name}
-    tail -n +2 ~{out_tsv1_only_name} | wc -l > ~{out_tsv1_only_count_name}
-    tail -n +2 ~{out_tsv2_only_name} | wc -l > ~{out_tsv2_only_count_name}
-  >>>
-  output {
-    File out_both = out_both_name
-    Int out_both_count = read_int(out_both_count_name)
-    File out_tsv1_only = out_tsv1_only_name
-    Int out_tsv1_only_count = read_int(out_tsv1_only_count_name)
-    File out_tsv2_only = out_tsv2_only_name
-    Int out_tsv2_only_count = read_int(out_tsv2_only_count_name)
-  }
-}
-
 task extract_unique {
   input {
     File in_file
@@ -382,30 +339,11 @@ task extract_unique {
   }
 }
 
-task slice_by_value {
-  input {
-    File in_file
-    String col
-    String value
-    String out_file_name
-  }
-  runtime {
-    docker: "gcr.io/v2f-public-resources/cumulonimbus-ecaviar:191206"
-    cpu: 1
-    memory: "5 GB"
-    disks: "local-disk 20 HDD"
-  }
-  command <<<
-    chowser tsv slice --in ~{in_file} --out ~{out_file_name} --col ~{col} --value ~{value}
-  >>>
-  output {
-    File out_file = out_file_name
-  }
-}
-
 task ecaviar {
   input {
-    File unsorted2_tsv
+    File unsorted_all2_tsv
+    String value_col2
+    String value2
     String position_col2
     File intersection_all_but_tsv2
     String intersection_id_col
@@ -425,8 +363,10 @@ task ecaviar {
     disks: "local-disk 20 HDD"
   }
   command <<<
+    echo "= = = Filter second all tsv by given value = = ="
+    chowser tsv slice --in ~{unsorted_all2_tsv} --out unsorted2.tsv --col ~{value_col2} --value ~{value2}
     echo "= = = Sort second tsv by position = = ="
-    chowser tsv sort --in ~{unsorted2_tsv} --out region2.tsv --col ~{position_col2}
+    chowser tsv sort --in unsorted2.tsv --out region2.tsv --col ~{position_col2}
     echo "= = = Intersect common variants with second tsv = = ="
     chowser variants match-tsv-tsv \
       --tsv1 region2.tsv --tsv2 ~{intersection_all_but_tsv2} --id-col1 ~{id_col2} --id-col2 ~{intersection_id_col}  \
