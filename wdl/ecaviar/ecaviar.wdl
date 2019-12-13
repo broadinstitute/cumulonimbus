@@ -146,15 +146,6 @@ workflow ecaviar {
               value = gene_id,
               out_file_name = "summary_" + cohort_name
           }
-          VariantsSummary expression_summary_for_gene = {
-            "file" : slice_by_gene_id.out_file,
-            "variant_id_col" : tissue.summary.variant_id_col,
-            "p_value_col" : tissue.summary.p_value_col,
-            "chromosome_col" : tissue.summary.chromosome_col,
-            "position_col" : tissue.summary.position_col,
-            "ref_col" : tissue.summary.ref_col,
-            "alt_col" : tissue.summary.alt_col
-          }
           call sort_file_by_col as sort_cohort_by_position {
             input:
               in_file = slice_by_gene_id.out_file,
@@ -173,28 +164,12 @@ workflow ecaviar {
           }
           Int n_selected_variants = match_variants_with_expression_summary.out_both_count
           if(n_selected_variants > 1) {
-            call select_variants_tsv as select_variants_phenotype_summary {
-              input:
-                data_file = sort_phenotype_summary.out_file,
-                selection_file = match_variants_with_expression_summary.out_both,
-                col_in_data = phenotype_variants_summary.variant_id_col,
-                col_in_selection = tissue.summary.variant_id_col,
-                out_file_name = "phenotype_summary_selected_variants_" + cohort_name
-            }
-            call select_variants_tsv as select_variants_expression_summary {
-              input:
-                data_file = sort_cohort_by_position.out_file,
-                selection_file = match_variants_with_expression_summary.out_both,
-                col_in_data = tissue.summary.variant_id_col,
-                col_in_selection = tissue.summary.variant_id_col,
-                out_file_name = "expression_summary_selected_variants_" + cohort_name
-            }
             call ecaviar {
               input:
-                p_value_file1 = select_variants_phenotype_summary.out_file,
+                region1_tsv = sort_phenotype_summary.out_file,
                 id_col1 = phenotype_variants_summary.variant_id_col,
                 p_col1 = phenotype_variants_summary.p_value_col,
-                p_value_file2 = select_variants_expression_summary.out_file,
+                region2_tsv = sort_cohort_by_position.out_file,
                 id_col2 = tissue.summary.variant_id_col,
                 p_col2 = tissue.summary.p_value_col,
                 region_vcf1 = clip_region_from_phenotype_samples.out_file,
@@ -446,35 +421,12 @@ task slice_by_value {
   }
 }
 
-task select_variants_tsv {
-  input {
-    File data_file
-    File selection_file
-    String col_in_data
-    String col_in_selection
-    String out_file_name
-  }
-  runtime {
-    docker: "gcr.io/v2f-public-resources/cumulonimbus-ecaviar:191206"
-    cpu: 1
-    memory: "5 GB"
-    disks: "local-disk 20 HDD"
-  }
-  command <<<
-    chowser variants select-tsv --data ~{data_file} --selection ~{selection_file} --out ~{out_file_name} \
-    --id-col-data ~{col_in_data} --id-col-selection ~{col_in_selection}
-  >>>
-  output {
-    File out_file = out_file_name
-  }
-}
-
 task ecaviar {
   input {
-    File p_value_file1
+    File region1_tsv
     String id_col1
     String p_col1
-    File p_value_file2
+    File region2_tsv
     String id_col2
     String p_col2
     File region_vcf1
@@ -490,10 +442,16 @@ task ecaviar {
     disks: "local-disk 20 HDD"
   }
   command <<<
-    echo "= = = Filter selected variants from first region = = ="
+    echo "= = = Filter selected variants from first region (tsv) = = ="
+    chowser variants select-tsv --data ~{region1_tsv} --selection ~{selected_variants} --out selected1.tsv \
+    --id-col-data ~{id_col1} --id-col-selection ~{selected_variant_id_col}
+    echo "= = = Filter selected variants from second region (tsv) = = ="
+    chowser variants select-tsv --data ~{region2_tsv} --selection ~{selected_variants} --out selected2.tsv \
+    --id-col-data ~{id_col2} --id-col-selection ~{selected_variant_id_col}
+    echo "= = = Filter selected variants from first region (vcf) = = ="
     chowser variants select-vcf --data ~{region_vcf1} --selection ~{selected_variants} --out selected1.vcf \
       --id-col-selection ~{selected_variant_id_col}
-    echo "= = = Filter selected variants from second region = = ="
+    echo "= = = Filter selected variants from second region (vcf) = = ="
     chowser variants select-vcf --data ~{region_vcf2} --selection ~{selected_variants} --out selected2.vcf \
       --id-col-selection ~{selected_variant_id_col}    
     echo "= = = Calculating first set of correlations = = ="
@@ -507,9 +465,9 @@ task ecaviar {
     chowser caviar matrix --ids-file selected2.vcf --values-file plink.ld \
       --value-col R --id-col1 SNP_A --id-col2 SNP_B --out ld_file2
     echo "= = = Calculating first file of Z-values = = ="
-    chowser caviar p-to-z --in ~{p_value_file1} --out z_file1 --id-col ~{id_col1} --p-col ~{p_col1}
+    chowser caviar p-to-z --in selected1.tsv --out z_file1 --id-col ~{id_col1} --p-col ~{p_col1}
     echo "= = = Calculating second file of Z-values = = ="
-    chowser caviar p-to-z --in ~{p_value_file2} --out z_file2 --id-col ~{id_col2} --p-col ~{p_col2}
+    chowser caviar p-to-z --in selected2.tsv --out z_file2 --id-col ~{id_col2} --p-col ~{p_col2}
     echo "= = = Running eCAVIAR = = ="
     eCAVIAR -l ld_file1 -z z_file1 -l ld_file2 -z z_file2 -o ~{out_files_base_name}
     echo "= = = Done with this task = = ="
