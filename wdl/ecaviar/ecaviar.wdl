@@ -162,22 +162,19 @@ workflow ecaviar {
               out_tsv1_only_name = "variants_not_in_expression_summary_" + cohort_name,
               out_tsv2_only_name = "variants_only_in_expression_summary_" + cohort_name,
           }
-          Int n_selected_variants = match_variants_with_expression_summary.out_both_count
-          if(n_selected_variants > 1) {
-            call ecaviar {
-              input:
-                region1_tsv = sort_phenotype_summary.out_file,
-                id_col1 = phenotype_variants_summary.variant_id_col,
-                p_col1 = phenotype_variants_summary.p_value_col,
-                region2_tsv = sort_cohort_by_position.out_file,
-                id_col2 = tissue.summary.variant_id_col,
-                p_col2 = tissue.summary.p_value_col,
-                region_vcf1 = clip_region_from_phenotype_samples.out_file,
-                region_vcf2 = clip_region_from_expression_samples.out_file,
-                selected_variants = match_variants_with_expression_summary.out_both,
-                selected_variant_id_col = tissue.summary.variant_id_col,
-                out_files_base_name = "ecaviar_" + cohort_name
-            }
+          call ecaviar {
+            input:
+              region1_tsv = sort_phenotype_summary.out_file,
+              id_col1 = phenotype_variants_summary.variant_id_col,
+              p_col1 = phenotype_variants_summary.p_value_col,
+              region2_tsv = sort_cohort_by_position.out_file,
+              id_col2 = tissue.summary.variant_id_col,
+              p_col2 = tissue.summary.p_value_col,
+              region_vcf1 = clip_region_from_phenotype_samples.out_file,
+              region_vcf2 = clip_region_from_expression_samples.out_file,
+              selected_variants = match_variants_with_expression_summary.out_both,
+              selected_variant_id_col = tissue.summary.variant_id_col,
+              out_files_base_name = "ecaviar_" + cohort_name
           }
         }
       }
@@ -442,34 +439,40 @@ task ecaviar {
     disks: "local-disk 20 HDD"
   }
   command <<<
-    echo "= = = Filter selected variants from first region (tsv) = = ="
-    chowser variants select-tsv --data ~{region1_tsv} --selection ~{selected_variants} --out selected1.tsv \
-    --id-col-data ~{id_col1} --id-col-selection ~{selected_variant_id_col}
-    echo "= = = Filter selected variants from second region (tsv) = = ="
-    chowser variants select-tsv --data ~{region2_tsv} --selection ~{selected_variants} --out selected2.tsv \
-    --id-col-data ~{id_col2} --id-col-selection ~{selected_variant_id_col}
-    echo "= = = Filter selected variants from first region (vcf) = = ="
-    chowser variants select-vcf --data ~{region_vcf1} --selection ~{selected_variants} --out selected1.vcf \
-      --id-col-selection ~{selected_variant_id_col}
-    echo "= = = Filter selected variants from second region (vcf) = = ="
-    chowser variants select-vcf --data ~{region_vcf2} --selection ~{selected_variants} --out selected2.vcf \
-      --id-col-selection ~{selected_variant_id_col}    
-    echo "= = = Calculating first set of correlations = = ="
-    plink --vcf selected1.vcf --a1-allele selected1.vcf 4 3 '#' --r --out plink
-    echo "= = = Casting first set of correlations into a square matrix = = ="
-    chowser caviar matrix --ids-file selected1.vcf --values-file plink.ld \
-      --value-col R --id-col1 SNP_A --id-col2 SNP_B --out ld_file1
-    echo "= = = Calculating second set of correlations = = ="
-    plink --vcf selected2.vcf --a1-allele selected2.vcf 4 3 '#' --r --out plink
-    echo "= = = Casting second set of correlations into a square matrix = = ="
-    chowser caviar matrix --ids-file selected2.vcf --values-file plink.ld \
-      --value-col R --id-col1 SNP_A --id-col2 SNP_B --out ld_file2
-    echo "= = = Calculating first file of Z-values = = ="
-    chowser caviar p-to-z --in selected1.tsv --out z_file1 --id-col ~{id_col1} --p-col ~{p_col1}
-    echo "= = = Calculating second file of Z-values = = ="
-    chowser caviar p-to-z --in selected2.tsv --out z_file2 --id-col ~{id_col2} --p-col ~{p_col2}
-    echo "= = = Running eCAVIAR = = ="
-    eCAVIAR -l ld_file1 -z z_file1 -l ld_file2 -z z_file2 -o ~{out_files_base_name}
+    echo "= = = Checking if there is more than one variant = = ="
+    if [ $(tail +2 ~{selected_variants}|wc -l) -gt 1 ]; then
+      echo "= = = There is more than one variant = = ="
+      echo "= = = Filter selected variants from first region (tsv) = = ="
+      chowser variants select-tsv --data ~{region1_tsv} --selection ~{selected_variants} --out selected1.tsv \
+      --id-col-data ~{id_col1} --id-col-selection ~{selected_variant_id_col}
+      echo "= = = Filter selected variants from second region (tsv) = = ="
+      chowser variants select-tsv --data ~{region2_tsv} --selection ~{selected_variants} --out selected2.tsv \
+      --id-col-data ~{id_col2} --id-col-selection ~{selected_variant_id_col}
+      echo "= = = Filter selected variants from first region (vcf) = = ="
+      chowser variants select-vcf --data ~{region_vcf1} --selection ~{selected_variants} --out selected1.vcf \
+        --id-col-selection ~{selected_variant_id_col}
+      echo "= = = Filter selected variants from second region (vcf) = = ="
+      chowser variants select-vcf --data ~{region_vcf2} --selection ~{selected_variants} --out selected2.vcf \
+        --id-col-selection ~{selected_variant_id_col}
+      echo "= = = Calculating first set of correlations = = ="
+      plink --vcf selected1.vcf --a1-allele selected1.vcf 4 3 '#' --r --out plink
+      echo "= = = Casting first set of correlations into a square matrix = = ="
+      chowser caviar matrix --ids-file selected1.vcf --values-file plink.ld \
+        --value-col R --id-col1 SNP_A --id-col2 SNP_B --out ld_file1
+      echo "= = = Calculating second set of correlations = = ="
+      plink --vcf selected2.vcf --a1-allele selected2.vcf 4 3 '#' --r --out plink
+      echo "= = = Casting second set of correlations into a square matrix = = ="
+      chowser caviar matrix --ids-file selected2.vcf --values-file plink.ld \
+        --value-col R --id-col1 SNP_A --id-col2 SNP_B --out ld_file2
+      echo "= = = Calculating first file of Z-values = = ="
+      chowser caviar p-to-z --in selected1.tsv --out z_file1 --id-col ~{id_col1} --p-col ~{p_col1}
+      echo "= = = Calculating second file of Z-values = = ="
+      chowser caviar p-to-z --in selected2.tsv --out z_file2 --id-col ~{id_col2} --p-col ~{p_col2}
+      echo "= = = Running eCAVIAR = = ="
+      eCAVIAR -l ld_file1 -z z_file1 -l ld_file2 -z z_file2 -o ~{out_files_base_name}
+    else
+      echo "= = = There is not more than one variant  = = ="
+    fi
     echo "= = = Done with this task = = ="
   >>>
   output {
