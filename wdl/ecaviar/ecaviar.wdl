@@ -152,18 +152,10 @@ workflow ecaviar {
               col = tissue.summary.position_col,
               out_file_name = "summary_sorted_" + cohort_name
           }
-          call match_variants_tsv_tsv as match_variants_with_expression_summary {
-            input:
-              in_tsv1 = sort_cohort_by_position.out_file,
-              in_tsv2 = match_variants_phenotype_expression_samples.out_both,
-              id_col1 = tissue.summary.variant_id_col,
-              id_col2 = phenotype_variants_summary.variant_id_col,
-              out_both_name = "variants_" + cohort_name,
-              out_tsv1_only_name = "variants_not_in_expression_summary_" + cohort_name,
-              out_tsv2_only_name = "variants_only_in_expression_summary_" + cohort_name,
-          }
           call ecaviar {
             input:
+              intersection_all_but_tsv2 = match_variants_phenotype_expression_samples.out_both,
+              intersection_id_col = tissue.summary.variant_id_col,
               region1_tsv = sort_phenotype_summary.out_file,
               id_col1 = phenotype_variants_summary.variant_id_col,
               p_col1 = phenotype_variants_summary.p_value_col,
@@ -172,8 +164,6 @@ workflow ecaviar {
               p_col2 = tissue.summary.p_value_col,
               region_vcf1 = clip_region_from_phenotype_samples.out_file,
               region_vcf2 = clip_region_from_expression_samples.out_file,
-              selected_variants = match_variants_with_expression_summary.out_both,
-              selected_variant_id_col = tissue.summary.variant_id_col,
               out_files_base_name = "ecaviar_" + cohort_name
           }
         }
@@ -420,6 +410,8 @@ task slice_by_value {
 
 task ecaviar {
   input {
+    File intersection_all_but_tsv2
+    String intersection_id_col
     File region1_tsv
     String id_col1
     String p_col1
@@ -428,8 +420,6 @@ task ecaviar {
     String p_col2
     File region_vcf1
     File region_vcf2
-    File selected_variants
-    String selected_variant_id_col
     String out_files_base_name
   }
   runtime {
@@ -439,21 +429,25 @@ task ecaviar {
     disks: "local-disk 20 HDD"
   }
   command <<<
+    echo "= = = Intersect common variants with second tsv = = ="
+    chowser variants match-tsv-tsv \
+      --tsv1 ~{region2_tsv} --tsv2 ~{intersection_all_but_tsv2} --id-col1 ~{id_col2} --id-col2 ~{intersection_id_col}  \
+      --in-both selected.tsv --tsv1-only unmatched1.tsv --tsv2-only unmatched2.tsv
     echo "= = = Checking if there is more than one variant = = ="
-    if [ $(tail +2 ~{selected_variants}|wc -l) -gt 1 ]; then
+    if [ $(tail +2 selected.tsv|wc -l) -gt 1 ]; then
       echo "= = = There is more than one variant = = ="
       echo "= = = Filter selected variants from first region (tsv) = = ="
-      chowser variants select-tsv --data ~{region1_tsv} --selection ~{selected_variants} --out selected1.tsv \
-      --id-col-data ~{id_col1} --id-col-selection ~{selected_variant_id_col}
+      chowser variants select-tsv --data ~{region1_tsv} --selection selected.tsv --out selected1.tsv \
+      --id-col-data ~{id_col1} --id-col-selection ~{intersection_id_col}
       echo "= = = Filter selected variants from second region (tsv) = = ="
-      chowser variants select-tsv --data ~{region2_tsv} --selection ~{selected_variants} --out selected2.tsv \
-      --id-col-data ~{id_col2} --id-col-selection ~{selected_variant_id_col}
+      chowser variants select-tsv --data ~{region2_tsv} --selection selected.tsv --out selected2.tsv \
+      --id-col-data ~{id_col2} --id-col-selection ~{intersection_id_col}
       echo "= = = Filter selected variants from first region (vcf) = = ="
-      chowser variants select-vcf --data ~{region_vcf1} --selection ~{selected_variants} --out selected1.vcf \
-        --id-col-selection ~{selected_variant_id_col}
+      chowser variants select-vcf --data ~{region_vcf1} --selection selected.tsv --out selected1.vcf \
+        --id-col-selection ~{intersection_id_col}
       echo "= = = Filter selected variants from second region (vcf) = = ="
-      chowser variants select-vcf --data ~{region_vcf2} --selection ~{selected_variants} --out selected2.vcf \
-        --id-col-selection ~{selected_variant_id_col}
+      chowser variants select-vcf --data ~{region_vcf2} --selection selected.tsv --out selected2.vcf \
+        --id-col-selection ~{intersection_id_col}
       echo "= = = Calculating first set of correlations = = ="
       plink --vcf selected1.vcf --a1-allele selected1.vcf 4 3 '#' --r --out plink
       echo "= = = Casting first set of correlations into a square matrix = = ="
