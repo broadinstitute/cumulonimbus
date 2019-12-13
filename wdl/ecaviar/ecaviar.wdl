@@ -146,20 +146,15 @@ workflow ecaviar {
               value = gene_id,
               out_file_name = "summary_" + cohort_name
           }
-          call sort_file_by_col as sort_cohort_by_position {
-            input:
-              in_file = slice_by_gene_id.out_file,
-              col = tissue.summary.position_col,
-              out_file_name = "summary_sorted_" + cohort_name
-          }
           call ecaviar {
             input:
+              unsorted2_tsv = slice_by_gene_id.out_file,
+              position_col2 = tissue.summary.position_col,
               intersection_all_but_tsv2 = match_variants_phenotype_expression_samples.out_both,
               intersection_id_col = tissue.summary.variant_id_col,
               region1_tsv = sort_phenotype_summary.out_file,
               id_col1 = phenotype_variants_summary.variant_id_col,
               p_col1 = phenotype_variants_summary.p_value_col,
-              region2_tsv = sort_cohort_by_position.out_file,
               id_col2 = tissue.summary.variant_id_col,
               p_col2 = tissue.summary.p_value_col,
               region_vcf1 = clip_region_from_phenotype_samples.out_file,
@@ -410,12 +405,13 @@ task slice_by_value {
 
 task ecaviar {
   input {
+    File unsorted2_tsv
+    String position_col2
     File intersection_all_but_tsv2
     String intersection_id_col
     File region1_tsv
     String id_col1
     String p_col1
-    File region2_tsv
     String id_col2
     String p_col2
     File region_vcf1
@@ -429,9 +425,11 @@ task ecaviar {
     disks: "local-disk 20 HDD"
   }
   command <<<
+    echo "= = = Sort second tsv by position = = ="
+    chowser tsv sort --in ~{unsorted2_tsv} --out region2.tsv --col ~{position_col2}
     echo "= = = Intersect common variants with second tsv = = ="
     chowser variants match-tsv-tsv \
-      --tsv1 ~{region2_tsv} --tsv2 ~{intersection_all_but_tsv2} --id-col1 ~{id_col2} --id-col2 ~{intersection_id_col}  \
+      --tsv1 region2.tsv --tsv2 ~{intersection_all_but_tsv2} --id-col1 ~{id_col2} --id-col2 ~{intersection_id_col}  \
       --in-both selected.tsv --tsv1-only unmatched1.tsv --tsv2-only unmatched2.tsv
     echo "= = = Checking if there is more than one variant = = ="
     if [ $(tail +2 selected.tsv|wc -l) -gt 1 ]; then
@@ -440,7 +438,7 @@ task ecaviar {
       chowser variants select-tsv --data ~{region1_tsv} --selection selected.tsv --out selected1.tsv \
       --id-col-data ~{id_col1} --id-col-selection ~{intersection_id_col}
       echo "= = = Filter selected variants from second region (tsv) = = ="
-      chowser variants select-tsv --data ~{region2_tsv} --selection selected.tsv --out selected2.tsv \
+      chowser variants select-tsv --data region2.tsv --selection selected.tsv --out selected2.tsv \
       --id-col-data ~{id_col2} --id-col-selection ~{intersection_id_col}
       echo "= = = Filter selected variants from first region (vcf) = = ="
       chowser variants select-vcf --data ~{region_vcf1} --selection selected.tsv --out selected1.vcf \
