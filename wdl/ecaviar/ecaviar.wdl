@@ -115,47 +115,37 @@ workflow ecaviar {
         out_tsv_only_name = "phenotype_only_" + region_notation
     }
     scatter(tissue in expression_data.tissues) {
-      call clip_region_from_summary as clip_region_from_expression_summary {
+      call clip_eqtl_region_and_get_genes {
         input:
-          in_file = tissue.summary.file,
+          summary_file = tissue.summary.file,
           chromosome_col = tissue.summary.chromosome_col,
           position_col = tissue.summary.position_col,
           chromosome = chromosome,
           start = start,
           end = end,
-          out_file_name = "summary_" + tissue.tissue_name + "_" + region_notation
+          eqtl_region_file_name = "summary_" + tissue.tissue_name + "_" + region_notation,
+          gene_id_col = tissue.gene_id_col,
+          genes_file_name = "genes_" + tissue.tissue_name + "_" + region_notation
       }
-      Int n_expression_entries = clip_region_from_expression_summary.count
-      String report_by_region_tissue =
-        "Tissue " + tissue.tissue_name + " in region " + region_notation + " has " +
-        n_expression_entries + " expression entries."
-      if(n_expression_entries > 0) {
-        call extract_unique as extract_genes {
+      scatter(gene_entry in read_objects(clip_eqtl_region_and_get_genes.genes_file)) {
+        String gene_id = gene_entry[tissue.gene_id_col]
+        String cohort_name = gene_id + "_" + tissue.tissue_name + "_" + region_notation
+        call ecaviar {
           input:
-            in_file = clip_region_from_expression_summary.out_file,
-            col = tissue.gene_id_col,
-            out_file_name = "genes_" + tissue.tissue_name + "_" + region_notation
-        }
-        scatter(gene_entry in read_objects(extract_genes.out_file)) {
-          String gene_id = gene_entry[tissue.gene_id_col]
-          String cohort_name = gene_id + "_" + tissue.tissue_name + "_" + region_notation
-          call ecaviar {
-            input:
-              unsorted_all2_tsv = clip_region_from_expression_summary.out_file,
-              value_col2 = tissue.gene_id_col,
-              value2 = gene_id,
-              position_col2 = tissue.summary.position_col,
-              intersection_all_but_tsv2 = match_variants_phenotype_expression_samples.out_both,
-              intersection_id_col = tissue.summary.variant_id_col,
-              region1_tsv = sort_phenotype_summary.out_file,
-              id_col1 = phenotype_variants_summary.variant_id_col,
-              p_col1 = phenotype_variants_summary.p_value_col,
-              id_col2 = tissue.summary.variant_id_col,
-              p_col2 = tissue.summary.p_value_col,
-              region_vcf1 = clip_region_from_phenotype_samples.out_file,
-              region_vcf2 = clip_region_from_expression_samples.out_file,
-              out_files_base_name = "ecaviar_" + cohort_name
-          }
+            unsorted_all2_tsv = clip_eqtl_region_and_get_genes.eqtl_region_file,
+            value_col2 = tissue.gene_id_col,
+            value2 = gene_id,
+            position_col2 = tissue.summary.position_col,
+            intersection_all_but_tsv2 = match_variants_phenotype_expression_samples.out_both,
+            intersection_id_col = tissue.summary.variant_id_col,
+            region1_tsv = sort_phenotype_summary.out_file,
+            id_col1 = phenotype_variants_summary.variant_id_col,
+            p_col1 = phenotype_variants_summary.p_value_col,
+            id_col2 = tissue.summary.variant_id_col,
+            p_col2 = tissue.summary.p_value_col,
+            region_vcf1 = clip_region_from_phenotype_samples.out_file,
+            region_vcf2 = clip_region_from_expression_samples.out_file,
+            out_files_base_name = "ecaviar_" + cohort_name
         }
       }
     }
@@ -319,11 +309,17 @@ task match_variants_vcf_tsv {
   }
 }
 
-task extract_unique {
+task clip_eqtl_region_and_get_genes {
   input {
-    File in_file
-    String col
-    String out_file_name
+    File summary_file
+    String chromosome_col
+    String position_col
+    String chromosome
+    Int start
+    Int end
+    String eqtl_region_file_name
+    String gene_id_col
+    String genes_file_name
   }
   runtime {
     docker: "gcr.io/v2f-public-resources/cumulonimbus-ecaviar:191206"
@@ -332,10 +328,17 @@ task extract_unique {
     disks: "local-disk 20 HDD"
   }
   command <<<
-    chowser tsv extract-unique --in ~{in_file} --out ~{out_file_name} --col ~{col}
+    echo "= = = Clipping region from EQTL file = = ="
+    chowser variants for-region --in ~{summary_file} --out ~{eqtl_region_file_name} \
+      --chrom-col ~{chromosome_col} --pos-col ~{position_col} \
+      --chrom ~{chromosome} --start ~{start} --end ~{end}
+    echo "= = = Extracting list of genes = = ="
+    chowser tsv extract-unique --in ~{eqtl_region_file_name} --out ~{genes_file_name} --col ~{gene_id_col}
+    echo "= = = Done with this task = = ="
   >>>
   output {
-    File out_file = out_file_name
+    File eqtl_region_file = eqtl_region_file_name
+    File genes_file = genes_file_name
   }
 }
 
