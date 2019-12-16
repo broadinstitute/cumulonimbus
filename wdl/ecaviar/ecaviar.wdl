@@ -35,84 +35,42 @@ workflow ecaviar {
     ExpressionData expression_data
   }
 
-  String significant_variants_file_name = "significant_variants"
-
-  call get_phenotype_significant_variants {
-    input:
-      in_file = phenotype_variants_summary.file,
-      p_value_col = phenotype_variants_summary.p_value_col,
-      p_value_limit = p_value_limit,
-      out_file_name = significant_variants_file_name
-  }
-
   String regions_file_name = "regions"
 
   call get_regions_around_significance {
     input:
-      in_file = get_phenotype_significant_variants.out_file,
+      phenotype_summary = phenotype_variants_summary.file,
+      p_value_col = phenotype_variants_summary.p_value_col,
+      p_value_threshold = p_value_limit,
       chromosome_col = phenotype_variants_summary.chromosome_col,
       position_col = phenotype_variants_summary.position_col,
       radius = region_padding,
-      out_file_name = regions_file_name
+      regions_file_name = regions_file_name
   }
 
   String region_start_col = "start"
   String region_end_col = "end"
 
-  scatter(region in read_objects(get_regions_around_significance.out_file)) {
+  scatter(region in read_objects(get_regions_around_significance.regions_file)) {
     String chromosome = region[phenotype_variants_summary.chromosome_col]
     Int start = region[region_start_col]
     Int end = region[region_end_col]
     String region_notation = chromosome + "_" + start + "-" + end
-    call clip_region_from_samples as clip_region_from_phenotype_samples {
+    call data_munging_per_region {
       input:
-        samples_files = phenotype_samples,
-        chromosome = chromosome,
-        start = start,
-        end = end,
-        out_file_name = "samples_phenotype_" + region_notation + ".vcf"
-    }
-    call clip_region_from_samples as clip_region_from_expression_samples {
-      input:
-        samples_files = expression_data.samples_files,
-        chromosome = chromosome,
-        start = start,
-        end = end,
-        out_file_name = "samples_expression_" + region_notation + ".vcf"
-    }
-    call clip_region_from_summary as clip_region_from_phenotype_summary {
-      input:
-        in_file = get_phenotype_significant_variants.out_file,
+        phenotype_samples_files = phenotype_samples,
+        expression_samples_files = expression_data.samples_files,
+        phenotype_summary = phenotype_variants_summary.file,
+        id_col = phenotype_variants_summary.variant_id_col,
         chromosome_col = phenotype_variants_summary.chromosome_col,
         position_col = phenotype_variants_summary.position_col,
+        phenotype_samples_name = "samples_phenotype_" + region_notation + ".vcf",
+        expression_samples_name = "samples_expression_" + region_notation + ".vcf",
         chromosome = chromosome,
         start = start,
         end = end,
-        out_file_name = "summary_" + region_notation
-    }
-    call sort_file_by_col as sort_phenotype_summary {
-      input:
-        in_file = clip_region_from_phenotype_summary.out_file,
-        col = phenotype_variants_summary.position_col,
-        out_file_name = "phenotype_summary_sorted_" + region_notation
-    }
-    call match_variants_vcf_tsv as match_variants_phenotype_samples_summary {
-      input:
-        in_vcf = clip_region_from_phenotype_samples.out_file,
-        in_tsv = sort_phenotype_summary.out_file,
-        id_col = phenotype_variants_summary.variant_id_col,
-        out_both_name = "phenotype_common_" + region_notation,
-        out_vcf_only_name = "phenotype_samples_only_" + region_notation,
-        out_tsv_only_name = "phenotype_summary_only_" + region_notation
-    }
-    call match_variants_vcf_tsv as match_variants_phenotype_expression_samples {
-      input:
-        in_vcf = clip_region_from_expression_samples.out_file,
-        in_tsv = match_variants_phenotype_samples_summary.out_both,
-        id_col = phenotype_variants_summary.variant_id_col,
-        out_both_name = "phenotype_expression_samples_" + region_notation,
-        out_vcf_only_name = "expression_samples_only_" + region_notation,
-        out_tsv_only_name = "phenotype_only_" + region_notation
+        phenotype_summary_sorted_name = "phenotype_summary_sorted_" + region_notation,
+        common_variants_name = "common_variants" + region_notation
     }
     scatter(tissue in expression_data.tissues) {
       call clip_eqtl_region_and_get_genes {
@@ -136,15 +94,15 @@ workflow ecaviar {
             value_col2 = tissue.gene_id_col,
             value2 = gene_id,
             position_col2 = tissue.summary.position_col,
-            intersection_all_but_tsv2 = match_variants_phenotype_expression_samples.out_both,
+            intersection_all_but_tsv2 = data_munging_per_region.common_variants,
             intersection_id_col = tissue.summary.variant_id_col,
-            region1_tsv = sort_phenotype_summary.out_file,
+            region1_tsv = data_munging_per_region.phenotype_summary_sorted,
             id_col1 = phenotype_variants_summary.variant_id_col,
             p_col1 = phenotype_variants_summary.p_value_col,
             id_col2 = tissue.summary.variant_id_col,
             p_col2 = tissue.summary.p_value_col,
-            region_vcf1 = clip_region_from_phenotype_samples.out_file,
-            region_vcf2 = clip_region_from_expression_samples.out_file,
+            region_vcf1 = data_munging_per_region.phenotype_samples,
+            region_vcf2 = data_munging_per_region.expression_samples,
             out_files_base_name = "ecaviar_" + cohort_name
         }
       }
@@ -152,34 +110,15 @@ workflow ecaviar {
   }
 }
 
-task get_phenotype_significant_variants {
-  input {
-    File in_file
-    String p_value_col
-    Float p_value_limit
-    String out_file_name
-  }
-  runtime {
-    docker: "gcr.io/v2f-public-resources/cumulonimbus-ecaviar:191206"
-    cpu: 1
-    memory: "5 GB"
-    disks: "local-disk 20 HDD"
-  }
-  command <<<
-    chowser tsv range --in ~{in_file} --out ~{out_file_name} --col ~{p_value_col} --lt ~{p_value_limit}
-  >>>
-  output {
-    File out_file = out_file_name
-  }
-}
-
 task get_regions_around_significance {
   input {
-    File in_file
+    File phenotype_summary
+    String p_value_col
+    Float p_value_threshold
     String chromosome_col
     String position_col
     Int radius
-    String out_file_name
+    String regions_file_name
   }
   runtime {
     docker: "gcr.io/v2f-public-resources/cumulonimbus-ecaviar:191206"
@@ -188,52 +127,35 @@ task get_regions_around_significance {
     disks: "local-disk 20 HDD"
   }
   command <<<
-    chowser variants regions --in ~{in_file} --out ~{out_file_name} --chrom-col ~{chromosome_col} \
+    echo "= = = Now finding significant variants = = ="
+    chowser tsv range --in ~{phenotype_summary} --out significant_variants.tsv \
+      --col ~{p_value_col} --lt ~{p_value_threshold}
+    echo "= = = Now finding regions around significant variants = = ="
+    chowser variants regions --in significant_variants.tsv --out ~{regions_file_name} --chrom-col ~{chromosome_col} \
      --pos-col ~{position_col} --radius ~{radius}
+    echo "= = = Done with this task = = ="
   >>>
   output {
-    File out_file = out_file_name
+    File regions_file = regions_file_name
   }
 }
 
-task clip_region_from_samples {
+task data_munging_per_region {
   input {
-    SamplesFiles samples_files
-    String chromosome
-    Int start
-    Int end
-    String out_file_name
-  }
-  String count_suffix = ".count"
-  String out_count_file_name = out_file_name + count_suffix
-  runtime {
-    docker: "gcr.io/v2f-public-resources/cumulonimbus-ecaviar:191206"
-    cpu: 1
-    memory: "5 GB"
-    disks: "local-disk 20 HDD"
-  }
-  command <<<
-    tabix -h ~{samples_files.vcf_bgz} ~{chromosome}:~{start}-~{end-1} >~{out_file_name}
-    grep "#" -v ~{out_file_name} |wc -l > ~{out_count_file_name}
-  >>>
-  output {
-    File out_file = out_file_name
-    Int count = read_int(out_count_file_name)
-  }
-}
-
-task clip_region_from_summary {
-  input {
-    File in_file
-    String out_file_name
+    SamplesFiles phenotype_samples_files
+    SamplesFiles expression_samples_files
+    File phenotype_summary
+    String id_col
     String chromosome_col
     String position_col
     String chromosome
     Int start
     Int end
+    String phenotype_samples_name
+    String expression_samples_name
+    String phenotype_summary_sorted_name
+    String common_variants_name
   }
-  String count_suffix = ".count"
-  String out_count_file_name = out_file_name + count_suffix
   runtime {
     docker: "gcr.io/v2f-public-resources/cumulonimbus-ecaviar:191206"
     cpu: 1
@@ -241,71 +163,33 @@ task clip_region_from_summary {
     disks: "local-disk 20 HDD"
   }
   command <<<
-    chowser variants for-region --in ~{in_file} --out ~{out_file_name} \
+    echo "= = = Now clipping phenotype summary data to region = = ="
+    chowser variants for-region --in ~{phenotype_summary} --out phenotype_summary_region.tsv \
       --chrom-col ~{chromosome_col} --pos-col ~{position_col} \
       --chrom ~{chromosome} --start ~{start} --end ~{end}
-    tail -n +2 ~{out_file_name} | wc -l > ~{out_count_file_name}
-  >>>
-  output {
-    File out_file = out_file_name
-    Int count = read_int(out_count_file_name)
-  }
-}
-
-task sort_file_by_col {
-  input {
-    File in_file
-    String col
-    String out_file_name
-  }
-  runtime {
-    docker: "gcr.io/v2f-public-resources/cumulonimbus-ecaviar:191206"
-    cpu: 1
-    memory: "5 GB"
-    disks: "local-disk 20 HDD"
-  }
-  command <<<
-    chowser tsv sort --in ~{in_file} --out ~{out_file_name} --col ~{col}
-  >>>
-  output {
-    File out_file = out_file_name
-  }
-}
-
-task match_variants_vcf_tsv {
-  input {
-    File in_vcf
-    File in_tsv
-    String id_col
-    String out_both_name
-    String out_vcf_only_name
-    String out_tsv_only_name
-  }
-  String count_suffix = ".count"
-  String out_both_count_name = out_both_name + count_suffix
-  String out_vcf_only_count_name = out_vcf_only_name + count_suffix
-  String out_tsv_only_count_name = out_tsv_only_name + count_suffix
-  runtime {
-    docker: "gcr.io/v2f-public-resources/cumulonimbus-ecaviar:191206"
-    cpu: 1
-    memory: "5 GB"
-    disks: "local-disk 20 HDD"
-  }
-  command <<<
+    echo "= = = Now sorting phenotype summary data = = ="
+    chowser tsv sort --in phenotype_summary_region.tsv --out ~{phenotype_summary_sorted_name} --col ~{position_col}
+    echo "= = = Now clipping phenotype sample data to region = = ="
+    tabix -h ~{phenotype_samples_files.vcf_bgz} ~{chromosome}:~{start}-~{end-1} >~{phenotype_samples_name}
+    echo "= = = Now clipping expression sample data to region = = ="
+    tabix -h ~{expression_samples_files.vcf_bgz} ~{chromosome}:~{start}-~{end-1} >~{expression_samples_name}
+    echo "= = = Now intersecting phenotype summary with phenotype samples = = ="
     chowser variants match-vcf-tsv \
-      --vcf ~{in_vcf} --tsv ~{in_tsv} --id-col ~{id_col}  \
-      --in-both ~{out_both_name} --vcf-only ~{out_vcf_only_name} --tsv-only ~{out_tsv_only_name}
-    tail -n +2 ~{out_both_name} | wc -l > ~{out_both_count_name}
-    tail -n +2 ~{out_vcf_only_name} | wc -l > ~{out_vcf_only_count_name}
-    tail -n +2 ~{out_tsv_only_name} | wc -l > ~{out_tsv_only_count_name}
+      --vcf ~{phenotype_samples_name} --tsv ~{phenotype_summary_sorted_name} --id-col ~{id_col}  \
+      --in-both phenotype_common_variants.tsv --vcf-only only_in_phenotype_samples \
+      --tsv-only only_in_phenotype_summary
+    echo "= = = Now intersecting phenotype common variants with expression samples = = ="
+    chowser variants match-vcf-tsv \
+      --vcf ~{expression_samples_name} --tsv phenotype_common_variants.tsv --id-col ~{id_col}  \
+      --in-both ~{common_variants_name} --vcf-only only_in_expression_samples \
+      --tsv-only only_in_phenotype_data
+    echo "= = = Done with this task = = ="
   >>>
   output {
-    File out_both = out_both_name
-    Int out_both_count = read_int(out_both_count_name)
-    File out_vcf_only = out_vcf_only_name
-    Int out_vcf_only_count = read_int(out_vcf_only_count_name)
-    File out_tsv_only = out_tsv_only_name
-    Int out_tsv_only_count = read_int(out_tsv_only_count_name)
+    File phenotype_samples = phenotype_samples_name
+    File expression_samples =  expression_samples_name
+    File phenotype_summary_sorted = phenotype_summary_sorted_name
+    File common_variants = common_variants_name
   }
 }
 
