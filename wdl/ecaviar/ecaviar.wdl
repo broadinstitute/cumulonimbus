@@ -121,6 +121,7 @@ task get_regions_around_significance {
     String regions_file_name
   }
   runtime {
+    preemptible: 3
     docker: "gcr.io/v2f-public-resources/cumulonimbus-ecaviar:191206"
     cpu: 1
     memory: "5 GB"
@@ -157,6 +158,7 @@ task data_munging_per_region {
     String common_variants_name
   }
   runtime {
+    preemptible: 3
     docker: "gcr.io/v2f-public-resources/cumulonimbus-ecaviar:191206"
     cpu: 1
     memory: "5 GB"
@@ -206,6 +208,7 @@ task clip_eqtl_region_and_get_genes {
     String genes_file_name
   }
   runtime {
+    preemptible: 3
     docker: "gcr.io/v2f-public-resources/cumulonimbus-ecaviar:191206"
     cpu: 1
     memory: "5 GB"
@@ -244,6 +247,7 @@ task ecaviar {
     String out_files_base_name
   }
   runtime {
+    preemptible: 3
     docker: "gcr.io/v2f-public-resources/cumulonimbus-ecaviar:191206"
     cpu: 1
     memory: "5 GB"
