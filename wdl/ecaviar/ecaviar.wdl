@@ -85,25 +85,27 @@ workflow ecaviar {
           gene_id_col = tissue.gene_id_col,
           genes_file_name = "genes_" + tissue.tissue_name + "_" + region_notation
       }
-      scatter(gene_entry in read_objects(clip_eqtl_region_and_get_genes.genes_file)) {
-        String gene_id = gene_entry[tissue.gene_id_col]
-        String cohort_name = gene_id + "_" + tissue.tissue_name + "_" + region_notation
-        call ecaviar {
-          input:
-            unsorted_all2_tsv = clip_eqtl_region_and_get_genes.eqtl_region_file,
-            value_col2 = tissue.gene_id_col,
-            value2 = gene_id,
-            position_col2 = tissue.summary.position_col,
-            intersection_all_but_tsv2 = data_munging_per_region.common_variants,
-            intersection_id_col = tissue.summary.variant_id_col,
-            region1_tsv = data_munging_per_region.phenotype_summary_sorted,
-            id_col1 = phenotype_variants_summary.variant_id_col,
-            p_col1 = phenotype_variants_summary.p_value_col,
-            id_col2 = tissue.summary.variant_id_col,
-            p_col2 = tissue.summary.p_value_col,
-            region_vcf1 = data_munging_per_region.phenotype_samples,
-            region_vcf2 = data_munging_per_region.expression_samples,
-            out_files_base_name = "ecaviar_" + cohort_name
+      if(clip_eqtl_region_and_get_genes.n_genes > 0) {
+        scatter(gene_entry in read_objects(clip_eqtl_region_and_get_genes.genes_file)) {
+          String gene_id = gene_entry[tissue.gene_id_col]
+          String cohort_name = gene_id + "_" + tissue.tissue_name + "_" + region_notation
+          call ecaviar {
+            input:
+              unsorted_all2_tsv = clip_eqtl_region_and_get_genes.eqtl_region_file,
+              value_col2 = tissue.gene_id_col,
+              value2 = gene_id,
+              position_col2 = tissue.summary.position_col,
+              intersection_all_but_tsv2 = data_munging_per_region.common_variants,
+              intersection_id_col = tissue.summary.variant_id_col,
+              region1_tsv = data_munging_per_region.phenotype_summary_sorted,
+              id_col1 = phenotype_variants_summary.variant_id_col,
+              p_col1 = phenotype_variants_summary.p_value_col,
+              id_col2 = tissue.summary.variant_id_col,
+              p_col2 = tissue.summary.p_value_col,
+              region_vcf1 = data_munging_per_region.phenotype_samples,
+              region_vcf2 = data_munging_per_region.expression_samples,
+              out_files_base_name = "ecaviar_" + cohort_name
+          }
         }
       }
     }
@@ -162,7 +164,7 @@ task data_munging_per_region {
     docker: "gcr.io/v2f-public-resources/cumulonimbus-ecaviar:191206"
     cpu: 1
     memory: "5 GB"
-    disks: "local-disk 20 HDD"
+    disks: "local-disk 30 HDD"
   }
   command <<<
     echo "= = = Now clipping phenotype summary data to region = = ="
@@ -207,6 +209,7 @@ task clip_eqtl_region_and_get_genes {
     String gene_id_col
     String genes_file_name
   }
+  String n_genes_file_name = "n_genes"
   runtime {
     preemptible: 3
     docker: "gcr.io/v2f-public-resources/cumulonimbus-ecaviar:191206"
@@ -221,11 +224,16 @@ task clip_eqtl_region_and_get_genes {
       --chrom ~{chromosome} --start ~{start} --end ~{end}
     echo "= = = Extracting list of genes = = ="
     chowser tsv extract-unique --in ~{eqtl_region_file_name} --out ~{genes_file_name} --col ~{gene_id_col}
+    echo "= = = Counting number of genes = = ="
+    cat ~{genes_file_name} | tail +2 | wc -l > ~{n_genes_file_name}
+    echo "Number of genes is:"
+    cat ~{n_genes_file_name}
     echo "= = = Done with this task = = ="
   >>>
   output {
     File eqtl_region_file = eqtl_region_file_name
     File genes_file = genes_file_name
+    Int n_genes = read_int(n_genes_file_name)
   }
 }
 
