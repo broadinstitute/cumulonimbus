@@ -130,12 +130,17 @@ task get_regions_around_significance {
     disks: "local-disk 20 HDD"
   }
   command <<<
+    set -e
     echo "= = = Now finding significant variants = = ="
     chowser tsv range --in ~{phenotype_summary} --out significant_variants.tsv \
       --col ~{p_value_col} --lt ~{p_value_threshold}
+    echo "= = = Beginning of significant variants = = ="
+    head significant_variants.tsv
     echo "= = = Now finding regions around significant variants = = ="
     chowser variants regions --in significant_variants.tsv --out ~{regions_file_name} --chrom-col ~{chromosome_col} \
      --pos-col ~{position_col} --radius ~{radius}
+    echo "= = = Beginning of regions = = ="
+    head ~{regions_file_name}
     echo "= = = Done with this task = = ="
   >>>
   output {
@@ -167,12 +172,17 @@ task data_munging_per_region {
     disks: "local-disk 30 HDD"
   }
   command <<<
+    set -e
     echo "= = = Now clipping phenotype summary data to region = = ="
     chowser variants for-region --in ~{phenotype_summary} --out phenotype_summary_region.tsv \
       --chrom-col ~{chromosome_col} --pos-col ~{position_col} \
       --chrom ~{chromosome} --start ~{start} --end ~{end}
+    echo "= = = Beginning of clipped summary data = = ="
+    head phenotype_summary_region.tsv
     echo "= = = Now sorting phenotype summary data = = ="
     chowser tsv sort --in phenotype_summary_region.tsv --out ~{phenotype_summary_sorted_name} --col ~{position_col}
+    echo "= = = Sorted phenotype summary data = = ="
+    head ~{phenotype_summary_sorted_name}
     echo "= = = Now clipping phenotype sample data to region = = ="
     tabix -h ~{phenotype_samples_files.vcf_bgz} ~{chromosome}:~{start}-~{end-1} >~{phenotype_samples_name}
     echo "= = = Now clipping expression sample data to region = = ="
@@ -182,11 +192,15 @@ task data_munging_per_region {
       --vcf ~{phenotype_samples_name} --tsv ~{phenotype_summary_sorted_name} --id-col ~{id_col}  \
       --in-both phenotype_common_variants.tsv --vcf-only only_in_phenotype_samples \
       --tsv-only only_in_phenotype_summary
+    echo "= = = Beginning of intersection of phenotype summary and phenotype samples = = ="
+    head phenotype_common_variants.tsv
     echo "= = = Now intersecting phenotype common variants with expression samples = = ="
     chowser variants match-vcf-tsv \
       --vcf ~{expression_samples_name} --tsv phenotype_common_variants.tsv --id-col ~{id_col}  \
       --in-both ~{common_variants_name} --vcf-only only_in_expression_samples \
       --tsv-only only_in_phenotype_data
+    echo "= = = Beginning of intersection of phenotype variants with expression samples = = ="
+    head ~{common_variants_name}
     echo "= = = Done with this task = = ="
   >>>
   output {
@@ -218,12 +232,16 @@ task clip_eqtl_region_and_get_genes {
     disks: "local-disk 20 HDD"
   }
   command <<<
+    set -e
     echo "= = = Clipping region from EQTL file = = ="
     chowser variants for-region --in ~{summary_file} --out ~{eqtl_region_file_name} \
       --chrom-col ~{chromosome_col} --pos-col ~{position_col} \
       --chrom ~{chromosome} --start ~{start} --end ~{end}
+    echo "= = = Beginning of clipped region = = ="
     echo "= = = Extracting list of genes = = ="
     chowser tsv extract-unique --in ~{eqtl_region_file_name} --out ~{genes_file_name} --col ~{gene_id_col}
+    echo "= = = Beginning of genes = = ="
+    head ~{genes_file_name}
     echo "= = = Counting number of genes = = ="
     cat ~{genes_file_name} | tail +2 | wc -l > ~{n_genes_file_name}
     echo "Number of genes is:"
@@ -262,14 +280,21 @@ task ecaviar {
     disks: "local-disk 20 HDD"
   }
   command <<<
-    echo "= = = Filter second all tsv by given value = = ="
+    set -e
+    echo "= = = Filter second tsv by given value = = ="
     chowser tsv slice --in ~{unsorted_all2_tsv} --out unsorted2.tsv --col ~{value_col2} --value ~{value2}
+    echo "= = = Beginning of filtered second TSV = = ="
+    head unsorted2.tsv
     echo "= = = Sort second tsv by position = = ="
     chowser tsv sort --in unsorted2.tsv --out region2.tsv --col ~{position_col2}
+    echo "= = = Beginning of sorted second TSV = = ="
+    head region2.tsv
     echo "= = = Intersect common variants with second tsv = = ="
     chowser variants match-tsv-tsv \
       --tsv1 region2.tsv --tsv2 ~{intersection_all_but_tsv2} --id-col1 ~{id_col2} --id-col2 ~{intersection_id_col}  \
       --in-both selected.tsv --tsv1-only unmatched1.tsv --tsv2-only unmatched2.tsv
+    echo "= = = Beginning of selected variants = = ="
+    head selected.tsv
     echo "= = = Checking if there is more than one variant = = ="
     if [ $(tail +2 selected.tsv|wc -l) -gt 1 ]; then
       echo "= = = There is more than one variant = = ="
