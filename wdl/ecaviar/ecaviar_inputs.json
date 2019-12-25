@@ -2,11 +2,11 @@
   "ecaviar.p_value_limit": "5e-8",
   "ecaviar.region_padding": "150000",
   "ecaviar.phenotype_samples": {
-    "vcf_bgz": "gs://fc-0da7007b-1c23-49ac-985b-9aaa6774a033/example/1kg/ALL.phase3_shapeit2_mvncall_integrated_v5a.20130502.genotypes.vcf.bgz",
-    "vcf_bgz_tbi": "gs://fc-0da7007b-1c23-49ac-985b-9aaa6774a033/example/1kg/ALL.phase3_shapeit2_mvncall_integrated_v5a.20130502.genotypes.vcf.bgz.tbi"
+    "vcf_bgz": "gs://fc-0da7007b-1c23-49ac-985b-9aaa6774a033/example/1kg/canon/ALL.phase3_shapeit2_mvncall_integrated_v5a.20130502.genotypes_canon.vcf.bgz",
+    "vcf_bgz_tbi": "gs://fc-0da7007b-1c23-49ac-985b-9aaa6774a033/example/1kg/canon/ALL.phase3_shapeit2_mvncall_integrated_v5a.20130502.genotypes_canon.vcf.bgz.tbi"
   },
   "ecaviar.phenotype_variants_summary": {
-    "file": "gs://fc-0da7007b-1c23-49ac-985b-9aaa6774a033/example/gwas/T2D.initial.sumstats",
+    "file": "gs://fc-0da7007b-1c23-49ac-985b-9aaa6774a033/example/gwas/T2D.initial.sumstats.canon",
     "p_value_col": "P",
     "variant_id_col": "SNP",
     "chromosome_col": "CHR",
@@ -16,8 +16,8 @@
   },
   "ecaviar.expression_data": {
     "samples_files": {
-      "vcf_bgz": "gs://fc-0da7007b-1c23-49ac-985b-9aaa6774a033/example/1kg/ALL.phase3_shapeit2_mvncall_integrated_v5a.20130502.genotypes.vcf.bgz",
-      "vcf_bgz_tbi": "gs://fc-0da7007b-1c23-49ac-985b-9aaa6774a033/example/1kg/ALL.phase3_shapeit2_mvncall_integrated_v5a.20130502.genotypes.vcf.bgz.tbi"
+      "vcf_bgz": "gs://fc-0da7007b-1c23-49ac-985b-9aaa6774a033/example/1kg/canon/ALL.phase3_shapeit2_mvncall_integrated_v5a.20130502.genotypes_canon.vcf.bgz",
+      "vcf_bgz_tbi": "gs://fc-0da7007b-1c23-49ac-985b-9aaa6774a033/example/1kg/canon/ALL.phase3_shapeit2_mvncall_integrated_v5a.20130502.genotypes_canon.vcf.bgz.tbi"
     },
     "tissues": [
       {
