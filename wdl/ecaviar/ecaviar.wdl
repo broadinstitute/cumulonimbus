@@ -238,6 +238,7 @@ task clip_eqtl_region_and_get_genes {
       --chrom-col ~{chromosome_col} --pos-col ~{position_col} \
       --chrom ~{chromosome} --start ~{start} --end ~{end}
     echo "= = = Beginning of clipped region = = ="
+    head ~{eqtl_region_file_name}
     echo "= = = Extracting list of genes = = ="
     chowser tsv extract-unique --in ~{eqtl_region_file_name} --out ~{genes_file_name} --col ~{gene_id_col}
     echo "= = = Beginning of genes = = ="
