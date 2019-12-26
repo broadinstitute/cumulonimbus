@@ -76,8 +76,7 @@ workflow ecaviar {
       call clip_eqtl_region_and_get_genes {
         input:
           summary_file = tissue.summary.file,
-          chromosome_col = tissue.summary.chromosome_col,
-          position_col = tissue.summary.position_col,
+          id_col = tissue.summary.variant_id_col,
           chromosome = chromosome,
           start = start,
           end = end,
@@ -214,8 +213,7 @@ task data_munging_per_region {
 task clip_eqtl_region_and_get_genes {
   input {
     File summary_file
-    String chromosome_col
-    String position_col
+    String id_col
     String chromosome
     Int start
     Int end
@@ -234,9 +232,8 @@ task clip_eqtl_region_and_get_genes {
   command <<<
     set -e
     echo "= = = Clipping region from EQTL file = = ="
-    chowser variants for-region --in ~{summary_file} --out ~{eqtl_region_file_name} \
-      --chrom-col ~{chromosome_col} --pos-col ~{position_col} \
-      --chrom ~{chromosome} --start ~{start} --end ~{end}
+    chowser variants for-region-by-id --in ~{summary_file} --out ~{eqtl_region_file_name} \
+      --id-col ~{id_col} --chrom ~{chromosome} --start ~{start} --end ~{end}
     echo "= = = Beginning of clipped region = = ="
     head ~{eqtl_region_file_name}
     echo "= = = Extracting list of genes = = ="
