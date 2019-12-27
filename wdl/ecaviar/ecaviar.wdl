@@ -284,7 +284,7 @@ task ecaviar {
     echo "= = = Beginning of filtered second TSV = = ="
     head unsorted2.tsv
     echo "= = = Sort second tsv by position = = ="
-    chowser tsv sort --in unsorted2.tsv --out region2.tsv --col ~{position_col2}
+    chowser tsv sort-ids --in unsorted2.tsv --out region2.tsv --col ~{id_col2}
     echo "= = = Beginning of sorted second TSV = = ="
     head region2.tsv
     echo "= = = Intersect common variants with second tsv = = ="
