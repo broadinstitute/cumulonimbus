@@ -330,10 +330,10 @@ task ecaviar {
     echo "= = = Done with this task = = ="
   >>>
   output {
-    File? out_file_col = out_files_base_name + "_col"
-    File? out_file_1_set = out_files_base_name + "_1_set"
-    File? out_file_1_post = out_files_base_name + "_1_post"
-    File? out_file_2_set = out_files_base_name + "_2_set"
-    File? out_file_2_post = out_files_base_name + "_2_post"
+    Array[File] out_file_col = glob(out_files_base_name + "_col")
+    Array[File] out_file_1_set = glob(out_files_base_name + "_1_set")
+    Array[File] out_file_1_post = glob(out_files_base_name + "_1_post")
+    Array[File] out_file_2_set = glob(out_files_base_name + "_2_set")
+    Array[File] out_file_2_post = glob(out_files_base_name + "_2_post")
   }
 }
