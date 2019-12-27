@@ -36,7 +36,7 @@ RUN apt update && apt -y install g++ cmake git libgsl-dev liblapack3 liblapack-d
 # install JVM
 RUN apt update && apt -y install openjdk-11-jdk-headless
 
-# install SBT, lintian, chowser 1.7.1
+# install SBT, lintian, chowser 1.7.4
 RUN apt -y update && \
     apt -y install gnupg2 fakeroot lintian && \
     echo "deb https://dl.bintray.com/sbt/debian /" | tee -a /etc/apt/sources.list.d/sbt.list && \
@@ -48,7 +48,7 @@ RUN apt -y update && \
 # workaround for SBT issue https://github.com/sbt/sbt/issues/5270
     sbt sbtVersion && \
     sbt debian:lintian && \
-    apt -y install ./target/chowser_1.7.1_all.deb && \
+    apt -y install ./target/chowser_1.7.4_all.deb && \
     cd /work && \
     rm -r chowser && \
     apt -y remove sbt gnupg2 fakeroot lintian && \
