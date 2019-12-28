@@ -95,7 +95,7 @@ workflow ecaviar {
               value2 = gene_id,
               position_col2 = tissue.summary.position_col,
               intersection_all_but_tsv2 = data_munging_per_region.common_variants,
-              intersection_id_col = tissue.summary.variant_id_col,
+              intersection_id_col = phenotype_variants_summary.variant_id_col,
               region1_tsv = data_munging_per_region.phenotype_summary_sorted,
               id_col1 = phenotype_variants_summary.variant_id_col,
               p_col1 = phenotype_variants_summary.p_value_col,
