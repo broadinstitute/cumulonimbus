@@ -287,6 +287,8 @@ task ecaviar {
     chowser tsv sort-ids --in unsorted2.tsv --out region2.tsv --col ~{id_col2}
     echo "= = = Beginning of sorted second TSV = = ="
     head region2.tsv
+    echo "= = = Beginning of intersection of all but second TSV = = ="
+    head ~{intersection_all_but_tsv2}
     echo "= = = Intersect common variants with second tsv = = ="
     chowser variants match-tsv-tsv \
       --tsv1 region2.tsv --tsv2 ~{intersection_all_but_tsv2} --id-col1 ~{id_col2} --id-col2 ~{intersection_id_col}  \
