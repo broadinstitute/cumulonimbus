@@ -130,17 +130,17 @@ task get_regions_around_significance {
   }
   command <<<
     set -e
-    echo "= = = Now finding significant variants = = ="
+    echo "= = = $(date) = = = Now finding significant variants = = ="
     chowser tsv range --in ~{phenotype_summary} --out significant_variants.tsv \
       --col ~{p_value_col} --lt ~{p_value_threshold}
-    echo "= = = Beginning of significant variants = = ="
+    echo "= = = $(date) = = = Beginning of significant variants = = ="
     head significant_variants.tsv
-    echo "= = = Now finding regions around significant variants = = ="
+    echo "= = = $(date) = = = Now finding regions around significant variants = = ="
     chowser variants regions --in significant_variants.tsv --out ~{regions_file_name} --chrom-col ~{chromosome_col} \
      --pos-col ~{position_col} --radius ~{radius}
-    echo "= = = Beginning of regions = = ="
+    echo "= = = $(date) = = = Beginning of regions = = ="
     head ~{regions_file_name}
-    echo "= = = Done with this task = = ="
+    echo "= = = $(date) = = = Done with this task = = ="
   >>>
   output {
     File regions_file = regions_file_name
@@ -172,35 +172,35 @@ task data_munging_per_region {
   }
   command <<<
     set -e
-    echo "= = = Now clipping phenotype summary data to region = = ="
+    echo "= = = $(date) = = = Now clipping phenotype summary data to region = = ="
     chowser variants for-region --in ~{phenotype_summary} --out phenotype_summary_region.tsv \
       --chrom-col ~{chromosome_col} --pos-col ~{position_col} \
       --chrom ~{chromosome} --start ~{start} --end ~{end}
-    echo "= = = Beginning of clipped summary data = = ="
+    echo "= = = $(date) = = = Beginning of clipped summary data = = ="
     head phenotype_summary_region.tsv
-    echo "= = = Now sorting phenotype summary data = = ="
+    echo "= = = $(date) = = = Now sorting phenotype summary data = = ="
     chowser tsv sort --in phenotype_summary_region.tsv --out ~{phenotype_summary_sorted_name} --col ~{position_col}
-    echo "= = = Sorted phenotype summary data = = ="
+    echo "= = = $(date) = = = Sorted phenotype summary data = = ="
     head ~{phenotype_summary_sorted_name}
-    echo "= = = Now clipping phenotype sample data to region = = ="
+    echo "= = = $(date) = = = Now clipping phenotype sample data to region = = ="
     tabix -h ~{phenotype_samples_files.vcf_bgz} ~{chromosome}:~{start}-~{end-1} >~{phenotype_samples_name}
-    echo "= = = Now clipping expression sample data to region = = ="
+    echo "= = = $(date) = = = Now clipping expression sample data to region = = ="
     tabix -h ~{expression_samples_files.vcf_bgz} ~{chromosome}:~{start}-~{end-1} >~{expression_samples_name}
-    echo "= = = Now intersecting phenotype summary with phenotype samples = = ="
+    echo "= = = $(date) = = = Now intersecting phenotype summary with phenotype samples = = ="
     chowser variants match-vcf-tsv \
       --vcf ~{phenotype_samples_name} --tsv ~{phenotype_summary_sorted_name} --id-col ~{id_col}  \
       --in-both phenotype_common_variants.tsv --vcf-only only_in_phenotype_samples \
       --tsv-only only_in_phenotype_summary
-    echo "= = = Beginning of intersection of phenotype summary and phenotype samples = = ="
+    echo "= = = $(date) = = = Beginning of intersection of phenotype summary and phenotype samples = = ="
     head phenotype_common_variants.tsv
-    echo "= = = Now intersecting phenotype common variants with expression samples = = ="
+    echo "= = = $(date) = = = Now intersecting phenotype common variants with expression samples = = ="
     chowser variants match-vcf-tsv \
       --vcf ~{expression_samples_name} --tsv phenotype_common_variants.tsv --id-col ~{id_col}  \
       --in-both ~{common_variants_name} --vcf-only only_in_expression_samples \
       --tsv-only only_in_phenotype_data
-    echo "= = = Beginning of intersection of phenotype variants with expression samples = = ="
+    echo "= = = $(date) = = = Beginning of intersection of phenotype variants with expression samples = = ="
     head ~{common_variants_name}
-    echo "= = = Done with this task = = ="
+    echo "= = = $(date) = = = Done with this task = = ="
   >>>
   output {
     File phenotype_samples = phenotype_samples_name
@@ -231,20 +231,20 @@ task clip_eqtl_region_and_get_genes {
   }
   command <<<
     set -e
-    echo "= = = Clipping region from EQTL file = = ="
+    echo "= = = $(date) = = = Clipping region from EQTL file = = ="
     chowser variants for-region-by-id --in ~{summary_file} --out ~{eqtl_region_file_name} \
       --id-col ~{id_col} --chrom ~{chromosome} --start ~{start} --end ~{end}
-    echo "= = = Beginning of clipped region = = ="
+    echo "= = = $(date) = = = Beginning of clipped region = = ="
     head ~{eqtl_region_file_name}
-    echo "= = = Extracting list of genes = = ="
+    echo "= = = $(date) = = = Extracting list of genes = = ="
     chowser tsv extract-unique --in ~{eqtl_region_file_name} --out ~{genes_file_name} --col ~{gene_id_col}
-    echo "= = = Beginning of genes = = ="
+    echo "= = = $(date) = = = Beginning of genes = = ="
     head ~{genes_file_name}
-    echo "= = = Counting number of genes = = ="
+    echo "= = = $(date) = = = Counting number of genes = = ="
     cat ~{genes_file_name} | tail +2 | wc -l > ~{n_genes_file_name}
     echo "Number of genes is:"
     cat ~{n_genes_file_name}
-    echo "= = = Done with this task = = ="
+    echo "= = = $(date) = = = Done with this task = = ="
   >>>
   output {
     File eqtl_region_file = eqtl_region_file_name
@@ -279,57 +279,65 @@ task ecaviar {
   }
   command <<<
     set -e
-    echo "= = = Filter second tsv by given value = = ="
+    echo "= = = $(date) = = = Filter second tsv by given value = = ="
     chowser tsv slice --in ~{unsorted_all2_tsv} --out unsorted2.tsv --col ~{value_col2} --value ~{value2}
-    echo "= = = Beginning of filtered second TSV = = ="
+    echo "= = = $(date) = = = Beginning of filtered second TSV = = ="
     head unsorted2.tsv
-    echo "= = = Sort second tsv by position = = ="
+    echo "= = = $(date) = = = Sort second tsv by position = = ="
     chowser tsv sort-ids --in unsorted2.tsv --out region2.tsv --col ~{id_col2}
-    echo "= = = Beginning of sorted second TSV = = ="
+    echo "= = = $(date) = = = Beginning of sorted second TSV = = ="
     head region2.tsv
-    echo "= = = Beginning of intersection of all but second TSV = = ="
+    echo "= = = $(date) = = = Beginning of intersection of all but second TSV = = ="
     head ~{intersection_all_but_tsv2}
-    echo "= = = Intersect common variants with second tsv = = ="
+    echo "= = = $(date) = = = Intersect common variants with second tsv = = ="
     chowser variants match-tsv-tsv \
       --tsv1 region2.tsv --tsv2 ~{intersection_all_but_tsv2} --id-col1 ~{id_col2} --id-col2 ~{intersection_id_col}  \
       --in-both selected.tsv --tsv1-only unmatched1.tsv --tsv2-only unmatched2.tsv
-    echo "= = = Beginning of selected variants = = ="
+    echo "= = = $(date) = = = Beginning of selected variants = = ="
     head selected.tsv
-    echo "= = = Checking if there is more than one variant = = ="
+    echo "= = = $(date) = = = Checking if there is more than one variant = = ="
     if [ $(tail +2 selected.tsv|wc -l) -gt 1 ]; then
-      echo "= = = There is more than one variant = = ="
-      echo "= = = Filter selected variants from first region (tsv) = = ="
+      echo "= = = $(date) = = = There is more than one variant = = ="
+      echo "= = = $(date) = = = Filter selected variants from first region (tsv) = = ="
       chowser variants select-tsv --data ~{region1_tsv} --selection selected.tsv --out selected1.tsv \
       --id-col-data ~{id_col1} --id-col-selection ~{intersection_id_col}
-      echo "= = = Filter selected variants from second region (tsv) = = ="
+      echo "= = = $(date) = = = Beginning of selected variants from first region (tsv) = = ="
+      head selected1.tsv
+      echo "= = = $(date) = = = Filter selected variants from second region (tsv) = = ="
       chowser variants select-tsv --data region2.tsv --selection selected.tsv --out selected2.tsv \
       --id-col-data ~{id_col2} --id-col-selection ~{intersection_id_col}
-      echo "= = = Filter selected variants from first region (vcf) = = ="
+      echo "= = = $(date) = = = Beginning of selected variants from second region (tsv) = = ="
+      head selected2.tsv
+      echo "= = = $(date) = = = Filter selected variants from first region (vcf) = = ="
       chowser variants select-vcf --data ~{region_vcf1} --selection selected.tsv --out selected1.vcf \
         --id-col-selection ~{intersection_id_col}
-      echo "= = = Filter selected variants from second region (vcf) = = ="
+      echo "= = = $(date) = = = Beginning of selected variants from first region (vcf) = = ="
+      head -n 20 selected1.vcf
+      echo "= = = $(date) = = = Filter selected variants from second region (vcf) = = ="
       chowser variants select-vcf --data ~{region_vcf2} --selection selected.tsv --out selected2.vcf \
         --id-col-selection ~{intersection_id_col}
-      echo "= = = Calculating first set of correlations = = ="
+      echo "= = = $(date) = = = Beginning of selected variants from second region (vcf) = = ="
+      head -n 20 selected2.vcf
+      echo "= = = $(date) = = = Calculating first set of correlations = = ="
       plink --vcf selected1.vcf --a1-allele selected1.vcf 4 3 '#' --r --out plink
-      echo "= = = Casting first set of correlations into a square matrix = = ="
+      echo "= = = $(date) = = = Casting first set of correlations into a square matrix = = ="
       chowser caviar matrix --ids-file selected1.vcf --values-file plink.ld \
         --value-col R --id-col1 SNP_A --id-col2 SNP_B --out ld_file1
-      echo "= = = Calculating second set of correlations = = ="
+      echo "= = = $(date) = = = Calculating second set of correlations = = ="
       plink --vcf selected2.vcf --a1-allele selected2.vcf 4 3 '#' --r --out plink
-      echo "= = = Casting second set of correlations into a square matrix = = ="
+      echo "= = = $(date) = = = Casting second set of correlations into a square matrix = = ="
       chowser caviar matrix --ids-file selected2.vcf --values-file plink.ld \
         --value-col R --id-col1 SNP_A --id-col2 SNP_B --out ld_file2
-      echo "= = = Calculating first file of Z-values = = ="
+      echo "= = = $(date) = = = Calculating first file of Z-values = = ="
       chowser caviar p-to-z --in selected1.tsv --out z_file1 --id-col ~{id_col1} --p-col ~{p_col1}
-      echo "= = = Calculating second file of Z-values = = ="
+      echo "= = = $(date) = = = Calculating second file of Z-values = = ="
       chowser caviar p-to-z --in selected2.tsv --out z_file2 --id-col ~{id_col2} --p-col ~{p_col2}
-      echo "= = = Running eCAVIAR = = ="
+      echo "= = = $(date) = = = Running eCAVIAR = = ="
       eCAVIAR -l ld_file1 -z z_file1 -l ld_file2 -z z_file2 -o ~{out_files_base_name}
     else
-      echo "= = = There is not more than one variant  = = ="
+      echo "= = = $(date) = = = There is not more than one variant  = = ="
     fi
-    echo "= = = Done with this task = = ="
+    echo "= = = $(date) = = = Done with this task = = ="
   >>>
   output {
     Array[File] out_file_col = glob(out_files_base_name + "_col")
