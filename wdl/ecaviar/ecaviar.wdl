@@ -291,7 +291,7 @@ task ecaviar {
     head ~{intersection_all_but_tsv2}
     echo "= = = $(date) = = = Intersect common variants with second tsv = = ="
     chowser variants match-tsv-tsv \
-      --tsv1 region2.tsv --tsv2 ~{intersection_all_but_tsv2} --id-col1 ~{id_col2} --id-col2 ~{intersection_id_col}  \
+      --tsv1 ~{intersection_all_but_tsv2} --tsv2 region2.tsv --id-col1 ~{intersection_id_col} --id-col2 ~{id_col2}  \
       --in-both selected.tsv --tsv1-only unmatched1.tsv --tsv2-only unmatched2.tsv
     echo "= = = $(date) = = = Beginning of selected variants = = ="
     head selected.tsv
