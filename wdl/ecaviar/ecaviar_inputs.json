@@ -24,7 +24,7 @@
         "tissue_name": "Adipose_Visceral_Omentum",
         "gene_id_col": "gene_id",
         "summary": {
-          "file": "gs://fc-0da7007b-1c23-49ac-985b-9aaa6774a033/example/eqtl/tissues/hg37/Adipose_Visceral_Omentum.allpairs.txt",
+          "file": "gs://fc-0da7007b-1c23-49ac-985b-9aaa6774a033/example/eqtl/tissues/hg37/selection/Adipose_Visceral_Omentum.selection.txt",
           "p_value_col": "pval_nominal",
           "variant_id_col": "variant_id",
           "chromosome_col": "chrom",
@@ -37,7 +37,7 @@
         "tissue_name": "Pancreas",
         "gene_id_col": "gene_id",
         "summary": {
-          "file": "gs://fc-0da7007b-1c23-49ac-985b-9aaa6774a033/example/eqtl/tissues/hg37/Pancreas.allpairs.txt",
+          "file": "gs://fc-0da7007b-1c23-49ac-985b-9aaa6774a033/example/eqtl/tissues/hg37/selection/Pancreas.selection.txt",
           "p_value_col": "pval_nominal",
           "variant_id_col": "variant_id",
           "chromosome_col": "chrom",
@@ -50,7 +50,7 @@
         "tissue_name": "Stomach",
         "gene_id_col": "gene_id",
         "summary": {
-          "file": "gs://fc-0da7007b-1c23-49ac-985b-9aaa6774a033/example/eqtl/tissues/hg37/Stomach.allpairs.txt",
+          "file": "gs://fc-0da7007b-1c23-49ac-985b-9aaa6774a033/example/eqtl/tissues/hg37/selection/Stomach.selection.txt",
           "p_value_col": "pval_nominal",
           "variant_id_col": "variant_id",
           "chromosome_col": "chrom",
