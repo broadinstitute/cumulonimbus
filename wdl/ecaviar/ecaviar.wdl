@@ -319,19 +319,31 @@ task ecaviar {
       echo "= = = $(date) = = = Beginning of selected variants from second region (vcf) = = ="
       head -n 20 selected2.vcf
       echo "= = = $(date) = = = Calculating first set of correlations = = ="
-      plink --vcf selected1.vcf --a1-allele selected1.vcf 4 3 '#' --r --out plink
+      plink --vcf selected1.vcf --a1-allele selected1.vcf 4 3 '#' --r --out plink1
+      echo "= = = $(date) = = = First set of correlations = = ="
+      head plink1.ld
       echo "= = = $(date) = = = Casting first set of correlations into a square matrix = = ="
-      chowser caviar matrix --ids-file selected1.vcf --values-file plink.ld \
+      chowser caviar matrix --ids-file selected1.vcf --values-file plink1.ld \
         --value-col R --id-col1 SNP_A --id-col2 SNP_B --out ld_file1
+      echo "= = = $(date) = = = First set of correlations as square matrix= = ="
+      head ld_file1
       echo "= = = $(date) = = = Calculating second set of correlations = = ="
-      plink --vcf selected2.vcf --a1-allele selected2.vcf 4 3 '#' --r --out plink
+      plink --vcf selected2.vcf --a1-allele selected2.vcf 4 3 '#' --r --out plink2
+      echo "= = = $(date) = = = Second set of correlations = = ="
+      head plink2.ld
       echo "= = = $(date) = = = Casting second set of correlations into a square matrix = = ="
-      chowser caviar matrix --ids-file selected2.vcf --values-file plink.ld \
+      chowser caviar matrix --ids-file selected2.vcf --values-file plink2.ld \
         --value-col R --id-col1 SNP_A --id-col2 SNP_B --out ld_file2
+      echo "= = = $(date) = = = Second set of correlations as square matrix= = ="
+      head ld_file2
       echo "= = = $(date) = = = Calculating first file of Z-values = = ="
       chowser caviar p-to-z --in selected1.tsv --out z_file1 --id-col ~{id_col1} --p-col ~{p_col1}
+      echo "= = = $(date) = = = First file of Z-values = = ="
+      head z_file1
       echo "= = = $(date) = = = Calculating second file of Z-values = = ="
       chowser caviar p-to-z --in selected2.tsv --out z_file2 --id-col ~{id_col2} --p-col ~{p_col2}
+      echo "= = = $(date) = = = Second file of Z-values = = ="
+      head z_file2
       echo "= = = $(date) = = = Running eCAVIAR = = ="
       eCAVIAR -l ld_file1 -z z_file1 -l ld_file2 -z z_file2 -o ~{out_files_base_name}
     else
