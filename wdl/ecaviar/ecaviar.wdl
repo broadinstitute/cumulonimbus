@@ -123,7 +123,7 @@ task get_regions_around_significance {
   }
   runtime {
     preemptible: 3
-    docker: "gcr.io/v2f-public-resources/cumulonimbus-ecaviar:191227"
+    docker: "gcr.io/v2f-public-resources/cumulonimbus-ecaviar:200121"
     cpu: 1
     memory: "5 GB"
     disks: "local-disk 20 HDD"
@@ -165,7 +165,7 @@ task data_munging_per_region {
   }
   runtime {
     preemptible: 3
-    docker: "gcr.io/v2f-public-resources/cumulonimbus-ecaviar:191227"
+    docker: "gcr.io/v2f-public-resources/cumulonimbus-ecaviar:200121"
     cpu: 1
     memory: "5 GB"
     disks: "local-disk 30 HDD"
@@ -224,7 +224,7 @@ task clip_eqtl_region_and_get_genes {
   String n_genes_file_name = "n_genes"
   runtime {
     preemptible: 3
-    docker: "gcr.io/v2f-public-resources/cumulonimbus-ecaviar:191227"
+    docker: "gcr.io/v2f-public-resources/cumulonimbus-ecaviar:200121"
     cpu: 1
     memory: "5 GB"
     disks: "local-disk 20 HDD"
@@ -272,7 +272,7 @@ task ecaviar {
   }
   runtime {
     preemptible: 3
-    docker: "gcr.io/v2f-public-resources/cumulonimbus-ecaviar:191227"
+    docker: "gcr.io/v2f-public-resources/cumulonimbus-ecaviar:200121"
     cpu: 1
     memory: "5 GB"
     disks: "local-disk 20 HDD"

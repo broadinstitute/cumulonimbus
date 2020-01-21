@@ -28,9 +28,9 @@ RUN apt update && apt -y install g++ cmake git libgsl-dev liblapack3 liblapack-d
     cd /work && \
     mv /work/caviar/CAVIAR-C++/eCAVIAR eCAVIAR && \
     chmod u+x eCAVIAR && \
-    rm -r caviar && \
+#    rm -r caviar && \
     ln -s /work/eCAVIAR /usr/local/bin/eCAVIAR && \
-    apt -y remove cmake g++ && \
+#    apt -y remove cmake g++ && \
     apt -y autoremove
 
 # install JVM
@@ -45,6 +45,8 @@ RUN apt -y update && \
     apt-get install sbt && \
     git clone https://github.com/broadinstitute/chowser.git && \
     cd chowser && \
+# checkout commit for Chowser 1.7.4
+    git checkout 45a129a6f16d0fbd835fc91d381864e4c5ce99c4 && \
 # workaround for SBT issue https://github.com/sbt/sbt/issues/5270
     sbt sbtVersion && \
     sbt debian:lintian && \
