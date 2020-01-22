@@ -21,20 +21,22 @@ RUN mkdir tmp_plink && \
 
 RUN apt update && apt -y install python3
 
-# install eCAVIAR prerequisites
-RUN apt update && apt -y install g++ cmake git libgsl-dev liblapack3 liblapack-dev libblas3 libblas-dev
-
 # install eCAVIAR
-RUN git clone https://github.com/fhormoz/caviar.git
-RUN cd caviar/CAVIAR-C++ && make && chmod +x eCAVIAR
-
-# link to eCAVIAR
-RUN ln -s /work/caviar/CAVIAR-C++/eCAVIAR /usr/local/bin/eCAVIAR
+RUN apt update && apt -y install g++ cmake git libgsl-dev liblapack3 liblapack-dev libblas3 libblas-dev && \
+    git clone https://github.com/fhormoz/caviar.git && \
+    cd caviar/CAVIAR-C++ && make && chmod +x eCAVIAR && \
+    cd /work && \
+    mv /work/caviar/CAVIAR-C++/eCAVIAR eCAVIAR && \
+    chmod u+x eCAVIAR && \
+    rm -r caviar && \
+    ln -s /work/eCAVIAR /usr/local/bin/eCAVIAR && \
+    apt -y remove cmake g++ && \
+    apt -y autoremove
 
 # install JVM
 RUN apt update && apt -y install openjdk-11-jdk-headless
 
-# install SBT, lintian, chowser 1.7.4
+# install SBT, lintian, chowser 1.7.4-specialfix
 RUN apt -y update && \
     apt -y install gnupg2 fakeroot lintian && \
     echo "deb https://dl.bintray.com/sbt/debian /" | tee -a /etc/apt/sources.list.d/sbt.list && \
@@ -44,7 +46,7 @@ RUN apt -y update && \
     git clone https://github.com/broadinstitute/chowser.git && \
     cd chowser && \
 # checkout commit for Chowser 1.7.4
-    git checkout 45a129a6f16d0fbd835fc91d381864e4c5ce99c4 && \
+    git checkout e4d455d1bdb276aaa5cebae6d5905c38498b5504 && \
 # workaround for SBT issue https://github.com/sbt/sbt/issues/5270
     sbt sbtVersion && \
     sbt debian:lintian && \
