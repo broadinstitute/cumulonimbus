@@ -21,17 +21,15 @@ RUN mkdir tmp_plink && \
 
 RUN apt update && apt -y install python3
 
+# install eCAVIAR prerequisites
+RUN apt update && apt -y install g++ cmake git libgsl-dev liblapack3 liblapack-dev libblas3 libblas-dev
+
 # install eCAVIAR
-RUN apt update && apt -y install g++ cmake git libgsl-dev liblapack3 liblapack-dev libblas3 libblas-dev && \
-    git clone https://github.com/fhormoz/caviar.git && \
-    cd caviar/CAVIAR-C++ && make && chmod +x eCAVIAR && \
-    cd /work && \
-    mv /work/caviar/CAVIAR-C++/eCAVIAR eCAVIAR && \
-    chmod u+x eCAVIAR && \
-#    rm -r caviar && \
-    ln -s /work/eCAVIAR /usr/local/bin/eCAVIAR && \
-#    apt -y remove cmake g++ && \
-    apt -y autoremove
+RUN git clone https://github.com/fhormoz/caviar.git
+RUN cd caviar/CAVIAR-C++ && make && chmod +x eCAVIAR
+
+# link to eCAVIAR
+RUN ln -s /work/caviar/CAVIAR-C++/eCAVIAR /usr/local/bin/eCAVIAR
 
 # install JVM
 RUN apt update && apt -y install openjdk-11-jdk-headless
