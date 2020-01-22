@@ -274,7 +274,7 @@ task ecaviar {
     preemptible: 3
     docker: "gcr.io/v2f-public-resources/cumulonimbus-ecaviar:200122"
     cpu: 1
-    memory: "7 GB"
+    memory: "5 GB"
     disks: "local-disk 20 HDD"
   }
   command <<<
