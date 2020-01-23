@@ -46,7 +46,7 @@ RUN apt -y update && \
     git clone https://github.com/broadinstitute/chowser.git && \
     cd chowser && \
 # checkout commit for Chowser 1.7.4
-    git checkout e4d455d1bdb276aaa5cebae6d5905c38498b5504 && \
+    git checkout be2d104283f694cda24fa63a2aba73938ff08624 && \
 # workaround for SBT issue https://github.com/sbt/sbt/issues/5270
     sbt sbtVersion && \
     sbt debian:lintian && \
