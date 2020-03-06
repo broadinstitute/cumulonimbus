@@ -5,6 +5,16 @@ workflow ldsc {
 }
 
 task ldsc_task {
+  input {
+    String out_files_base_name
+  }
+  runtime {
+    preemptible: 3
+    docker: "gcr.io/???"
+    cpu: 1
+    memory: "5 GB"
+    disks: "local-disk 20 HDD"
+  }
   command <<<
     set -e
     python3 --version
@@ -22,12 +32,20 @@ task ldsc_task {
     		--thin-annot
     		--out Brain_DPC_H3K27ac\
     		--print-snps hm.22.snp
+    python munge_sumstats.py --sumstats GIANT_BMI_Speliotes2010_publicrelease_HapMapCeuFreq.txt \
+        --merge-alleles w_hm3.snplist \
+        --out BMI \
+        --a1-inc
     python ldsc.py
     	--h2 BMI.sumstats.gz\
     	--ref-ld-chr baseline.\
     	--w-ld-chr weights.\
     	--overlap-annot\
     	--frqfile-chr 1000G.mac5eur.\
-    	--out BMI_baseline
+    	--out ~{out_files_base_name}
   >>>
+  output {
+    File log = out_files_base_name + ".log"
+    File results = out_files_base_name + ".results"
+  }
 }
