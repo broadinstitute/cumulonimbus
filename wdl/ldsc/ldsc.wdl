@@ -6,7 +6,11 @@ workflow ldsc {
 
 task ldsc_task {
   input {
+    String phenotype
     String out_files_base_name
+    String baseline_files_base_name = "baseline."
+    String weights_files_base_name = "weights."
+    String frequencies_files_base_name = "1000G.mac5eur."
   }
   runtime {
     preemptible: 3
@@ -24,24 +28,24 @@ task ldsc_task {
     		--windowsize 100000 \
     		--bimfile 1000G.EUR.QC.22.bim \
     		--annot-file GTEx_Cortex.annot.gz
-    python ldsc.py\
-    		--l2\
-    		--bfile 1000G.EUR.QC.22\
-    		--ld-wind-cm 1\
-    		--annot Brain_DPC_H3K27ac.annot.gz\
+    python ldsc.py \
+    		--l2 \
+    		--bfile 1000G.EUR.QC.22 \
+    		--ld-wind-cm 1 \
+    		--annot Brain_DPC_H3K27ac.annot.gz \
     		--thin-annot
-    		--out Brain_DPC_H3K27ac\
+    		--out Brain_DPC_H3K27ac \
     		--print-snps hm.22.snp
     python munge_sumstats.py --sumstats GIANT_BMI_Speliotes2010_publicrelease_HapMapCeuFreq.txt \
         --merge-alleles w_hm3.snplist \
-        --out BMI \
+        --out ~{phenotype} \
         --a1-inc
     python ldsc.py
-    	--h2 BMI.sumstats.gz\
-    	--ref-ld-chr baseline.\
-    	--w-ld-chr weights.\
-    	--overlap-annot\
-    	--frqfile-chr 1000G.mac5eur.\
+    	--h2 ~{phenotype}.sumstats.gz \
+    	--ref-ld-chr ~{baseline_files_base_name} \
+    	--w-ld-chr ~{weights_files_base_name} \
+    	--overlap-annot \
+    	--frqfile-chr ~{frequencies_files_base_name} \
     	--out ~{out_files_base_name}
   >>>
   output {
